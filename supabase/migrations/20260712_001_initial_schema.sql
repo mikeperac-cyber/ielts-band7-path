@@ -128,6 +128,15 @@ alter table public.error_logs enable row level security;
 alter table public.mock_attempts enable row level security;
 alter table private.lesson_reviews enable row level security;
 
+drop policy if exists "profile_owner" on public.profiles;
+drop policy if exists "published_lessons" on public.course_lessons;
+drop policy if exists "published_lesson_assets" on public.course_assets;
+drop policy if exists "progress_owner" on public.lesson_progress;
+drop policy if exists "attempt_owner" on public.skill_attempts;
+drop policy if exists "lexical_owner" on public.lexical_entries;
+drop policy if exists "errors_owner" on public.error_logs;
+drop policy if exists "mock_owner" on public.mock_attempts;
+
 create policy "profile_owner" on public.profiles for all to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 create policy "published_lessons" on public.course_lessons for select to authenticated using (is_published = true);
 create policy "published_lesson_assets" on public.course_assets for select to authenticated using (exists (select 1 from public.course_lessons lessons where lessons.id = course_assets.lesson_id and lessons.is_published = true));
@@ -163,5 +172,7 @@ create trigger on_auth_user_created after insert on auth.users for each row exec
 
 insert into storage.buckets (id, name, public) values ('course-media', 'course-media', false) on conflict (id) do update set public = false;
 insert into storage.buckets (id, name, public) values ('course-content', 'course-content', false) on conflict (id) do update set public = false;
+drop policy if exists "authenticated_can_read_course_media" on storage.objects;
+drop policy if exists "authenticated_can_read_course_content" on storage.objects;
 create policy "authenticated_can_read_course_media" on storage.objects for select to authenticated using (bucket_id = 'course-media');
 create policy "authenticated_can_read_course_content" on storage.objects for select to authenticated using (bucket_id = 'course-content');
