@@ -31,6 +31,10 @@ try {
     return Boolean(player && !player.paused && player.currentTime > 0);
   });
   await page.getByRole("button", { name: "Finish sample attempt" }).click();
+  await page.getByRole("heading", { name: "Speaking — Develop and justify ideas" }).waitFor();
+  await page.getByRole("button", { name: "Speaking", exact: true }).click();
+  await page.getByRole("heading", { name: "Speaking — Develop and justify ideas" }).waitFor();
+  await page.getByRole("button", { name: "Go to review" }).click();
   await page.getByRole("heading", { name: "Review your answers" }).waitFor();
   await browser.close();
   console.log("End-to-end sample lesson smoke test passed.");
