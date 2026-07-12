@@ -91,8 +91,8 @@ function FilterChip({
   );
 }
 
-export function TrackerView() {
-  const [phrases,   setPhrases]   = useState<Phrase[]>(initialPhrases);
+export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: Phrase[] }) {
+  const [phrases,   setPhrases]   = useState<Phrase[]>(initialPhrasesFromDb ?? initialPhrases);
   const [query,     setQuery]     = useState("");
   const [filter,    setFilter]    = useState<"All" | Skill>("All");
   const [adding,    setAdding]    = useState(false);

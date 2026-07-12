@@ -18,10 +18,13 @@ import {
   BookOpen,
   FlaskConical,
   Star,
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { sampleLesson } from "@/lib/sample-lesson";
 import { BandContrastTable } from "./band-contrast-table";
+import { gradeWriting } from "@/actions/grade-writing";
 
 type LessonPlayerProps = {
   sample?: boolean;
@@ -90,6 +93,8 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [readingTimeActive, setReadingTimeActive] = useState(false);
   const [readingTimeRemaining, setReadingTimeRemaining] = useState(30);
+  const [aiFeedback, setAiFeedback] = useState("");
+  const [aiBand, setAiBand] = useState<number | null>(null);
 
   const complete = useMemo(() => answers.filter(Boolean).length, [answers]);
   const source   = audioSrc ?? demoListeningAudio;
@@ -624,25 +629,37 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                       disabled={isSavingStudy || !studyText.trim()}
                       onClick={async () => {
                         setIsSavingStudy(true);
+                        setAiFeedback("");
                         try {
-                          await fetch("/api/progress", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ type: "writing_response", text: studyText, taskType: "transfer" })
-                          });
-                          setLastSaved(new Date());
+                          const result = await gradeWriting(studyText, "transfer");
+                          if (result.success) {
+                            setAiFeedback(result.feedback);
+                            setAiBand(result.estimatedBand?.overall ?? null);
+                            setLastSaved(new Date());
+                          }
                         } catch (err) {
                           console.error(err);
                         } finally {
                           setIsSavingStudy(false);
                         }
                       }}
-                      style={{ padding: "4px 12px", fontSize: 13, minHeight: "auto" }}
+                      style={{ padding: "4px 12px", fontSize: 13, minHeight: "auto", transition: "all 0.3s ease" }}
                     >
-                      {isSavingStudy ? "Saving..." : "Save Writing"}
+                      {isSavingStudy ? <><Loader2 size={15} className="animate-spin" /> AI Analyzing...</> : <><Sparkles size={15} /> Save & Get AI Feedback</>}
                     </button>
                   </div>
                 </div>
+                {aiFeedback && (
+                  <div style={{ marginTop: 24, padding: 20, background: "linear-gradient(135deg, var(--blue-2), var(--wash))", border: "1px solid var(--blue)", borderRadius: 12, animation: "fade-up 0.5s ease" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                      <div style={{ background: "var(--blue)", color: "#fff", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: "bold" }}>
+                        {aiBand}
+                      </div>
+                      <h3 style={{ margin: 0, fontSize: 16, color: "var(--navy)" }}>AI Assessment</h3>
+                    </div>
+                    <p style={{ margin: 0, color: "var(--text)", fontSize: 15, lineHeight: 1.6 }}>{aiFeedback}</p>
+                  </div>
+                )}
               </div>
             </section>
           )}

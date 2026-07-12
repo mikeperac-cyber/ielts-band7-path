@@ -19,6 +19,7 @@ import {
   Timer
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   { href: "/dashboard",   label: "Dashboard",      icon: LayoutDashboard },
@@ -175,6 +176,7 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
         <header className="app-topbar">
           <span className="topbar-title">{title}</span>
           <div className="topbar-right">
+            <ThemeToggle />
             {/* Notification bell */}
             <button className="notif-bell" aria-label="Notifications" type="button">
               <Bell size={18} />

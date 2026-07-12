@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import { PwaRegistry } from "@/components/pwa-registry";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,15 +43,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${inter.variable} ${lora.variable}`}>
+    <html lang="en" className={`h-full ${inter.variable} ${lora.variable}`} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#203a52" />
         <link rel="apple-touch-icon" href="/icon.png" />
       </head>
       <body className="min-h-full flex flex-col">
-        <PwaRegistry />
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <PwaRegistry />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
