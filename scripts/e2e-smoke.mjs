@@ -16,7 +16,20 @@ try {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "networkidle" });
-  await page.getByRole("link", { name: "Try Day 1 sample" }).click();
+  await page.getByRole("link", { name: "Try the free audio lesson" }).click();
+  const audio = page.locator("audio");
+  await audio.waitFor({ state: "attached" });
+  await page.waitForFunction(() => {
+    const player = document.querySelector("audio");
+    return Boolean(player && Number.isFinite(player.duration) && player.duration > 0);
+  });
+  const duration = await audio.evaluate((player) => player.duration);
+  if (duration < 60) throw new Error(`Sample audio duration was unexpectedly short: ${duration}s`);
+  await page.getByRole("button", { name: "Play listening audio" }).click();
+  await page.waitForFunction(() => {
+    const player = document.querySelector("audio");
+    return Boolean(player && !player.paused && player.currentTime > 0);
+  });
   await page.getByRole("button", { name: "Finish sample attempt" }).click();
   await page.getByRole("heading", { name: "Review your answers" }).waitFor();
   await browser.close();

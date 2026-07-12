@@ -4,7 +4,7 @@ export const sampleLesson = {
   title: "Listening + Speaking",
   duration: "90 min",
   topic: "Urban green spaces",
-  audioLabel: "Academic lecture · 7 min 15 sec",
+  audioLabel: "Original academic practice recording",
   questions: [
     "The main aim of green spaces is to improve people’s ________.",
     "In the nineteenth century, parks were often created on ________ land.",

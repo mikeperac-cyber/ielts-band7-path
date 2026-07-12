@@ -4,7 +4,8 @@ import { createServerClient } from "@supabase/ssr";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/dashboard";
+  const requestedNext = url.searchParams.get("next") ?? "/dashboard";
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard";
   const response = NextResponse.redirect(new URL(next, url.origin));
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
