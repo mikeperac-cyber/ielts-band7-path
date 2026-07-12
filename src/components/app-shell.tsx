@@ -16,6 +16,7 @@ import {
   Settings,
   Target,
   X,
+  Timer
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -63,11 +64,20 @@ function BandRing({ current, target }: { current: number; target: number }) {
   );
 }
 
-export function AppShell({ title, children }: { title: string; children: ReactNode }) {
+export function AppShell({ title, testDate, children }: { title: string; testDate?: string | null; children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const close = () => setOpen(false);
+
+  // Calculate days remaining
+  let daysRemaining = null;
+  if (testDate) {
+    const target = new Date(testDate);
+    const now = new Date();
+    const diff = target.getTime() - now.getTime();
+    daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
 
   return (
     <div className="app-frame">
@@ -139,6 +149,17 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             </div>
           </div>
         </div>
+
+        {/* Test Date Countdown */}
+        {daysRemaining !== null && (
+          <div style={{ margin: "0 16px 16px", background: "var(--orange-bg)", color: "var(--orange)", padding: "12px", borderRadius: 12, display: "flex", alignItems: "center", gap: 12 }}>
+            <Timer size={20} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>Test Date</div>
+              <div style={{ fontSize: 12 }}>{daysRemaining} days remaining</div>
+            </div>
+          </div>
+        )}
 
         {/* Settings link */}
         <Link className="sidebar-settings" href="/settings">

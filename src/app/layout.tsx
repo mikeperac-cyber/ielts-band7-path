@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Lora } from "next/font/google";
 import "./globals.css";
+import { PwaRegistry } from "@/components/pwa-registry";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,7 +43,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`h-full ${inter.variable} ${lora.variable}`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#203a52" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <PwaRegistry />
+        {children}
+      </body>
     </html>
   );
 }

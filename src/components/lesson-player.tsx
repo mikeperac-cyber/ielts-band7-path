@@ -20,10 +20,12 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { sampleLesson } from "@/lib/sample-lesson";
+import { BandContrastTable } from "./band-contrast-table";
 
 type LessonPlayerProps = {
   sample?: boolean;
   audioSrc?: string;
+  stalePhrases?: { phrase: string; skill: string }[];
 };
 
 type LessonSection = "listening" | "speaking" | "study" | "review";
@@ -63,7 +65,7 @@ function Waveform({ playing }: { playing: boolean }) {
   );
 }
 
-export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
+export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [answers, setAnswers]         = useState<string[]>(Array(sampleLesson.questions.length).fill(""));
   const [notes, setNotes]             = useState("");
@@ -81,6 +83,10 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
   const [markedForReview, setMarkedForReview] = useState(false);
   const [activeSection, setActiveSection] = useState<LessonSection>("listening");
   const [speakingNotes, setSpeakingNotes] = useState("");
+  const [studyText, setStudyText] = useState("");
+  const [isSavingStudy, setIsSavingStudy] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
 
   const complete = useMemo(() => answers.filter(Boolean).length, [answers]);
   const source   = audioSrc ?? demoListeningAudio;
@@ -109,6 +115,27 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
   useEffect(() => {
     if (activeSection !== "listening") audioRef.current?.pause();
   }, [activeSection]);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        togglePlayback();
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        rewind();
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        if (audioRef.current) audioRef.current.currentTime = Math.min(audioDuration, audioRef.current.currentTime + 5);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [audioDuration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateAnswer = useCallback((index: number, value: string) => {
     setAnswers((items) => items.map((item, i) => (i === index ? value : item)));
@@ -154,10 +181,28 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
     setAudioTime(Number(e.target.value));
   };
 
-  const finishAttempt = () => {
+  const finishAttempt = async () => {
     audioRef.current?.pause();
     setFinished(true);
     setActiveSection("speaking");
+    
+    // Save progress to DB (Fire and forget, optimistic)
+    if (!sample && !isSavingProgress) {
+      setIsSavingProgress(true);
+      try {
+        await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: "mock-lesson-id", // In a real scenario, pass actual lessonId
+            status: "completed",
+            durationSeconds: elapsedSeconds
+          })
+        });
+      } catch (err) {
+        console.error("Failed to save progress", err);
+      }
+    }
   };
 
   const clearAnswers = () => {
@@ -454,6 +499,19 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
                   <h2>Phrases for Speaking</h2>
                   <span>Band 7+ control</span>
                 </div>
+                {stalePhrases && stalePhrases.length > 0 && (
+                  <div style={{ background: "var(--orange-bg)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+                    <strong style={{ display: "block", color: "var(--orange)", fontSize: 13, marginBottom: 4 }}>🎯 Challenge: Use these today</strong>
+                    <p style={{ margin: 0, fontSize: 14, color: "var(--text)" }}>
+                      You saved these phrases previously but haven't used them yet. Try fitting them into your answers!
+                    </p>
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 20, fontSize: 14 }}>
+                      {stalePhrases.map((p) => (
+                        <li key={p.phrase}><b>{p.phrase}</b></li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="phrase-list">
                   {[
                     ["One aspect worth highlighting is", "focus the examiner on your main idea"],
@@ -502,11 +560,45 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
                   <b>this leads to</b>, and{" "}
                   <b>a good example of this would be</b>.
                 </p>
-                <textarea
-                  style={{ marginTop: 16, height: 180, width: "100%", background: "#fff", border: "1px solid #add8be", borderRadius: 6, padding: "10px 14px", resize: "vertical" }}
-                  aria-label="Transfer task writing"
-                  placeholder="Write your three sentences here…"
-                />
+                <div style={{ position: "relative", marginTop: 16 }}>
+                  <textarea
+                    value={studyText}
+                    onChange={(e) => setStudyText(e.target.value)}
+                    style={{ height: 180, width: "100%", background: "#fff", border: "1px solid #add8be", borderRadius: 6, padding: "10px 14px", resize: "vertical", paddingBottom: 40 }}
+                    aria-label="Transfer task writing"
+                    placeholder="Write your three sentences here…"
+                  />
+                  <div style={{ position: "absolute", bottom: 12, right: 12, display: "flex", gap: 12, alignItems: "center" }}>
+                    {lastSaved && (
+                      <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                        Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                    <button
+                      className="primary-button"
+                      type="button"
+                      disabled={isSavingStudy || !studyText.trim()}
+                      onClick={async () => {
+                        setIsSavingStudy(true);
+                        try {
+                          await fetch("/api/progress", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ type: "writing_response", text: studyText, taskType: "transfer" })
+                          });
+                          setLastSaved(new Date());
+                        } catch (err) {
+                          console.error(err);
+                        } finally {
+                          setIsSavingStudy(false);
+                        }
+                      }}
+                      style={{ padding: "4px 12px", fontSize: 13, minHeight: "auto" }}
+                    >
+                      {isSavingStudy ? "Saving..." : "Save Writing"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
           )}
@@ -529,6 +621,23 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
                     <summary>Show sample transcript and explanation</summary>
                     <p>{sampleLesson.review.transcript}</p>
                   </details>
+                  
+                  {/* Band 6 vs 7 Contrast Table */}
+                  <BandContrastTable 
+                    contrasts={[
+                      {
+                        band6: "Parks are good for health.",
+                        band7: "Urban green spaces demonstrably improve residents' psychological wellbeing.",
+                        reasoning: "Band 7 uses precise vocabulary ('urban green spaces', 'demonstrably improve') and complex noun phrases ('psychological wellbeing') instead of basic, vague words ('parks', 'good', 'health')."
+                      },
+                      {
+                        band6: "Cities need parks because they clean the air.",
+                        band7: "Parks play a crucial role in mitigating urban air pollution.",
+                        reasoning: "Band 7 employs topic-specific collocation ('mitigating air pollution', 'crucial role') and avoids simplistic causal links ('because they clean')."
+                      }
+                    ]} 
+                  />
+
                   <button
                     className="primary-button"
                     type="button"

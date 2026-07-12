@@ -1,0 +1,16 @@
+{
+  "name": "IELTS Band 7 Path",
+  "short_name": "Band 7 Path",
+  "description": "Your 10-week path to IELTS Band 7+",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#203a52",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

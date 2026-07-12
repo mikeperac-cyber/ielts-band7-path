@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Check, Download, Plus, Search, SlidersHorizontal, Target, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Skill   = "Listening" | "Reading" | "Writing" | "Speaking";
@@ -146,6 +146,51 @@ export function TrackerView() {
           <Plus size={17} /> Add phrase
         </button>
       </div>
+
+      {/* Weekly Phrase Sprint Challenge */}
+      <section className="panel" style={{ background: "linear-gradient(to right, #fef3c7, #fffbeb)", border: "1px solid #fde68a" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ background: "#f59e0b", color: "white", padding: 10, borderRadius: 12 }}>
+              <Target size={24} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: 18, margin: "0 0 4px", color: "#92400e" }}>Weekly Phrase Sprint</h2>
+              <p style={{ margin: 0, fontSize: 14, color: "#b45309" }}>Use these 5 phrases in your Speaking or Writing sessions this week to earn your badge.</p>
+            </div>
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#d97706", background: "#fef3c7", padding: "4px 12px", borderRadius: 99, border: "1px solid #fcd34d" }}>
+            3/5 completed
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8 }}>
+          {[
+            { p: "in light of the evidence", done: true },
+            { p: "a decisive factor in", done: true },
+            { p: "it can be inferred that", done: false },
+            { p: "consequently", done: false },
+            { p: "a marked contrast", done: true },
+          ].map((item, i) => (
+            <div key={i} style={{ 
+              flexShrink: 0, 
+              background: item.done ? "#10b981" : "white", 
+              color: item.done ? "white" : "var(--text)",
+              border: `1px solid ${item.done ? "#059669" : "#fcd34d"}`,
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}>
+              {item.done && <CheckCircle2 size={16} />}
+              {item.p}
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Summary cards */}
       <section className="tracker-summary">

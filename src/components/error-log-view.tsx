@@ -53,11 +53,25 @@ export function ErrorLogView() {
   const updateDraft = (key: keyof ErrorEntry, value: string) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-  const add = () => {
+  const add = async () => {
     if (!draft.type || !draft.mistake || !draft.rule) return;
-    setErrors((all) => [...all, { ...draft }]);
+    
+    // 1. Optimistic Update
+    const newError = { ...draft };
+    setErrors((all) => [newError, ...all]);
     setDraft({ skill: "Listening", type: "", mistake: "", rule: "" });
     setOpen(false);
+
+    // 2. Background Save
+    try {
+      // Simulate API call / Supabase insert
+      // await supabase.from("error_logs").insert([{ user_id: user.id, ...newError }]);
+      await new Promise(resolve => setTimeout(resolve, 800)); 
+    } catch (err) {
+      console.error("Failed to save error rule", err);
+      // Revert if failed
+      setErrors((all) => all.filter((e) => e !== newError));
+    }
   };
 
   return (
