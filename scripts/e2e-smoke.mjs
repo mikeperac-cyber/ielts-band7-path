@@ -24,7 +24,7 @@ try {
     return Boolean(player && Number.isFinite(player.duration) && player.duration > 0);
   });
   const duration = await audio.evaluate((player) => player.duration);
-  if (duration < 60) throw new Error(`Sample audio duration was unexpectedly short: ${duration}s`);
+  if (duration < 180) throw new Error(`Sample audio duration was unexpectedly short: ${duration}s`);
   await page.getByRole("button", { name: "Play listening audio" }).click();
   await page.waitForFunction(() => {
     const player = document.querySelector("audio");
