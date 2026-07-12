@@ -23,6 +23,7 @@ type LessonPlayerProps = {
 };
 
 const playbackRates = [1, 1.25, 1.5] as const;
+const demoListeningAudio = "/sample-listening.mp3";
 
 function formatTime(seconds: number) {
   const total = Math.max(0, Math.floor(seconds));
@@ -46,7 +47,7 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
   const [showNotes, setShowNotes] = useState(true);
   const [markedForReview, setMarkedForReview] = useState(false);
   const complete = useMemo(() => answers.filter(Boolean).length, [answers]);
-  const source = audioSrc ?? (sample ? "/sample-listening.wav" : undefined);
+  const source = audioSrc ?? demoListeningAudio;
 
   useEffect(() => {
     if (!started || finished) return;
@@ -125,7 +126,7 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
       </header>
       <div className="lesson-grid">
         <section className="lesson-paper">
-          <span className="eyebrow">LISTENING · SECTION 2</span>
+          <span className="eyebrow">LISTENING · SECTION 4</span>
           <h1>Listening — Note completion</h1>
           <p className="lead">You will hear part of a lecture. Complete the notes below. Write <b>ONE WORD ONLY</b> for each answer.</p>
           {source && (
@@ -154,7 +155,7 @@ export function LessonPlayer({ sample = false, audioSrc }: LessonPlayerProps) {
               <span>{formatTime(audioTime)} / {audioDuration > 0 ? formatTime(audioDuration) : "--:--"}</span>
               <i style={{ width: `${progress}%` }} />
             </div>
-            <span className="replay">{sample ? "Original sample audio" : "Protected course audio"}</span>
+            <span className="replay">{sample ? "Original sample audio" : "Course audio"}</span>
             <button type="button" onClick={toggleMute} aria-label={isMuted ? "Turn sound on" : "Mute audio"}>{isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}</button>
             <button type="button" onClick={changeRate} aria-label={`Change playback speed, currently ${playbackRate} times`}>{playbackRate}× <ChevronDown size={14} /></button>
             <button type="button" onClick={rewind}><RotateCcw size={17} /> Rewind 5s</button>
