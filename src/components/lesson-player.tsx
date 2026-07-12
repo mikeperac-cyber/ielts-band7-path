@@ -12,6 +12,7 @@ import {
   PenLine,
   Play,
   RotateCcw,
+  SkipForward,
   Volume2,
   VolumeX,
   BookOpen,
@@ -87,6 +88,8 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
   const [isSavingStudy, setIsSavingStudy] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [readingTimeActive, setReadingTimeActive] = useState(false);
+  const [readingTimeRemaining, setReadingTimeRemaining] = useState(30);
 
   const complete = useMemo(() => answers.filter(Boolean).length, [answers]);
   const source   = audioSrc ?? demoListeningAudio;
@@ -105,6 +108,23 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
     const timer = window.setInterval(() => setElapsedSeconds((v) => v + 1), 1000);
     return () => window.clearInterval(timer);
   }, [finished, started]);
+
+  // Reading time countdown
+  useEffect(() => {
+    if (!readingTimeActive || readingTimeRemaining <= 0) return;
+    const timer = window.setInterval(() => {
+      setReadingTimeRemaining((prev) => {
+        if (prev <= 1) {
+          setReadingTimeActive(false);
+          // auto-play when time is up
+          audioRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [readingTimeActive, readingTimeRemaining]);
 
   // Playback rate sync
   useEffect(() => {
@@ -151,9 +171,26 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
     }
     setAudioError("");
     startTimer();
+
+    // Handle Reading Time Gap
+    if (readingTimeRemaining > 0 && !readingTimeActive && !isPlaying && activeSection === "listening") {
+      setReadingTimeActive(true);
+      return;
+    }
+    if (readingTimeActive) {
+      // Skip reading time if they click while active
+      setReadingTimeActive(false);
+      setReadingTimeRemaining(0);
+    }
+
     try {
-      if (audio.paused) await audio.play();
-      else audio.pause();
+      if (audio.paused) {
+        await audio.play();
+        setIsPlaying(true);
+      } else {
+        audio.pause();
+        setIsPlaying(false);
+      }
     } catch {
       setAudioError("The recording could not play. Please check your sound settings and try again.");
     }
@@ -316,27 +353,34 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                   className="audio-play"
                   type="button"
                   onClick={togglePlayback}
-                  aria-label={isPlaying ? "Pause" : "Play"}
+                  aria-label={readingTimeActive ? "Skip reading time" : isPlaying ? "Pause" : "Play"}
                 >
-                  {isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
+                  {readingTimeActive ? <SkipForward size={22} fill="currentColor" /> : isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
                 </button>
 
-                {/* Waveform + seek */}
-                <div className="audio-track">
-                  <span>
-                    {formatTime(audioTime)} /{" "}
-                    {audioDuration > 0 ? formatTime(audioDuration) : "--:--"}
-                  </span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={audioDuration || 100}
-                    value={audioTime}
-                    onChange={seekAudio}
-                    aria-label="Seek audio"
-                    style={{ "--audio-progress": `${audioProgressPct}%` } as React.CSSProperties}
-                  />
-                </div>
+                {/* Waveform + seek or Reading Time */}
+                {readingTimeActive ? (
+                  <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--blue-2)", color: "var(--blue)", padding: "0 16px", borderRadius: 99, fontSize: 13, fontWeight: 700, border: "1px solid var(--blue)", height: 32 }}>
+                    <span>Reading time: {readingTimeRemaining}s remaining</span>
+                    <button onClick={togglePlayback} style={{ color: "var(--blue)", textDecoration: "underline", fontSize: 12 }}>Skip</button>
+                  </div>
+                ) : (
+                  <div className="audio-track">
+                    <span>
+                      {formatTime(audioTime)} /{" "}
+                      {audioDuration > 0 ? formatTime(audioDuration) : "--:--"}
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={audioDuration || 100}
+                      value={audioTime}
+                      onChange={seekAudio}
+                      aria-label="Seek audio"
+                      style={{ "--audio-progress": `${audioProgressPct}%` } as React.CSSProperties}
+                    />
+                  </div>
+                )}
 
                 {/* Animated waveform */}
                 <Waveform playing={isPlaying} />
