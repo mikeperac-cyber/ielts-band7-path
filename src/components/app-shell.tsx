@@ -80,8 +80,14 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
     daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 
+  // Determine dynamic theme class
+  let themeClass = "";
+  if (pathname.startsWith("/learn")) themeClass = "theme-learn";
+  else if (pathname.startsWith("/mocks")) themeClass = "theme-mocks";
+  else if (pathname.startsWith("/dashboard")) themeClass = "theme-dashboard";
+
   return (
-    <div className="app-frame">
+    <div className={`app-frame ${themeClass}`}>
       {/* Mobile hamburger */}
       <button
         className="mobile-menu-button"
@@ -100,7 +106,7 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
 
       {/* Sidebar */}
       <aside
-        className={`app-sidebar ${open ? "is-open" : ""}`}
+        className={`app-sidebar ${themeClass} ${open ? "is-open" : ""}`}
         aria-label="Programme navigation"
       >
         {/* Brand */}

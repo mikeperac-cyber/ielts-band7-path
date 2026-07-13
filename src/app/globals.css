@@ -587,7 +587,51 @@ h1,h2,h3 { font-family: var(--serif); line-height: 1.13; }
 .marketing-footer span { flex: 1; }
 
 /* ─── App Shell ─── */
-.app-frame { background: var(--wash); display: flex; min-height: 100vh; }
+.app-frame { 
+  background: var(--wash); 
+  display: flex; 
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dynamic Mesh Gradients */
+.app-frame::before {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  z-index: 0;
+  opacity: 0.6;
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(100, 183, 255, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(52, 211, 153, 0.1), transparent 40%),
+    radial-gradient(circle at 10% 80%, rgba(216, 180, 254, 0.15), transparent 40%);
+  animation: spin-slow 40s linear infinite;
+  pointer-events: none;
+  transition: background-image var(--transition-slow);
+}
+
+.app-frame.theme-learn::before {
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(139, 92, 246, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.1), transparent 40%),
+    radial-gradient(circle at 10% 80%, rgba(236, 72, 153, 0.1), transparent 40%);
+}
+
+.app-frame.theme-mocks::before {
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(245, 158, 11, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.1), transparent 40%),
+    radial-gradient(circle at 10% 80%, rgba(217, 119, 6, 0.1), transparent 40%);
+}
+
+.app-frame.theme-dashboard::before {
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.1), transparent 40%),
+    radial-gradient(circle at 10% 80%, rgba(52, 211, 153, 0.1), transparent 40%);
+}
+
 
 /* Sidebar */
 .app-sidebar {
@@ -603,7 +647,18 @@ h1,h2,h3 { font-family: var(--serif); line-height: 1.13; }
   height: 100vh;
   overflow-y: auto;
   border-right: 1px solid rgba(255,255,255,0.05);
+  transition: background var(--transition-slow);
 }
+.app-sidebar.theme-learn {
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+}
+.app-sidebar.theme-mocks {
+  background: linear-gradient(180deg, #451a03 0%, #78350f 100%);
+}
+.app-sidebar.theme-dashboard {
+  background: linear-gradient(180deg, #064e3b 0%, #065f46 100%);
+}
+
 .brand-lockup {
   align-items: center;
   display: flex;
@@ -701,14 +756,14 @@ h1,h2,h3 { font-family: var(--serif); line-height: 1.13; }
 .sidebar-settings svg:last-child { margin-left: auto; }
 
 /* Main area */
-.app-main { min-width: 0; width: 100%; }
+.app-main { min-width: 0; width: 100%; position: relative; z-index: 10; }
 
 /* Topbar */
 .app-topbar {
   align-items: center;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--line);
   color: #415a75;
   display: flex;
@@ -719,7 +774,13 @@ h1,h2,h3 { font-family: var(--serif); line-height: 1.13; }
   top: 0;
   z-index: 30;
   gap: 16px;
+  transition: background var(--transition-slow), border-color var(--transition-slow);
 }
+
+.app-frame.theme-learn .app-topbar { background: rgba(245, 243, 255, 0.85); border-bottom-color: rgba(139, 92, 246, 0.2); }
+.app-frame.theme-mocks .app-topbar { background: rgba(255, 251, 235, 0.85); border-bottom-color: rgba(245, 158, 11, 0.2); }
+.app-frame.theme-dashboard .app-topbar { background: rgba(236, 253, 245, 0.85); border-bottom-color: rgba(16, 185, 129, 0.2); }
+
 .topbar-title { font-size: 14px; font-weight: 500; }
 .topbar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
