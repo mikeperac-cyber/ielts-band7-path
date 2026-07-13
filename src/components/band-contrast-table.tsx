@@ -16,8 +16,9 @@ export function BandContrastTable({ contrasts }: BandContrastTableProps) {
   return (
     <div className="band-contrast-table" style={{ margin: "24px 0" }}>
       <h3 style={{ fontSize: 16, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ background: "var(--blue)", color: "white", padding: "2px 8px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>Examiner's Lens</span>
-        Why Band 6 stays Band 6
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)", padding: "4px 12px", background: "var(--wash)", borderRadius: 12 }}>
+          Why Band 7 stays Band 7
+        </span>
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {contrasts.map((item, idx) => (
@@ -35,7 +36,7 @@ export function BandContrastTable({ contrasts }: BandContrastTableProps) {
 
             <div style={{ flex: 1 }}>
               <div style={{ color: "var(--green)", fontSize: 12, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                <CheckCircle2 size={14} /> BAND 7.0+
+                <CheckCircle2 size={14} /> BAND 9.0+
               </div>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>"{item.band7}"</p>
             </div>

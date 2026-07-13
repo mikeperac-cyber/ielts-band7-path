@@ -25,8 +25,8 @@ export async function gradeSpeaking(transcript: string, durationSeconds: number)
     const { object } = await generateObject({
       model: deepseek("deepseek-chat"),
       system: `You are an expert IELTS examiner. Grade the following spoken transcript based on Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation (inferred from transcript text if possible). 
-You must be strictly accurate to the official IELTS Band 7 criteria.
-Provide an overall band score (e.g. 6.5, 7.0), sub-scores, and constructive feedback focusing on how to improve to a Band 7 or higher.`,
+You must be strictly accurate to the official IELTS Band 9 criteria.
+Provide an overall band score (e.g. 6.5, 7.0), sub-scores, and constructive feedback focusing on how to improve to a Band 9 or higher.`,
       prompt: `Transcript: ${transcript}\nDuration: ${durationSeconds} seconds\nWords per minute: ${wpm}\nFiller words detected: ${fillerCount}`,
       schema: z.object({
         overall: z.number().describe("The overall band score (0 to 9, in 0.5 increments)."),
@@ -34,7 +34,7 @@ Provide an overall band score (e.g. 6.5, 7.0), sub-scores, and constructive feed
         lexical: z.number(),
         grammar: z.number(),
         pronunciation: z.number(),
-        feedback: z.string().describe("Detailed feedback on how to improve to Band 7+.")
+        feedback: z.string().describe("Detailed feedback on how to improve to Band 9+.")
       }),
     });
 

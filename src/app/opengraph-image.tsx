@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "IELTS Academic Band 7 Path — a 10-week self-study programme";
+export const alt = "IELTS Academic Band 9 Path — a 10-week self-study programme";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -24,7 +24,7 @@ export default function OpenGraphImage() {
             IELTS ACADEMIC
           </div>
           <div style={{ display: "flex", fontFamily: "serif", fontSize: 72, fontWeight: 700, letterSpacing: -3, lineHeight: 1.08, marginTop: 38 }}>
-            Build your Band 7 performance, one deliberate day at a time.
+            Build your Band 9 performance, one deliberate day at a time.
           </div>
           <div style={{ color: "#c9e6fb", display: "flex", fontSize: 28, marginTop: 32 }}>
             10-week self-study programme · Original practice audio · 20 timed mocks

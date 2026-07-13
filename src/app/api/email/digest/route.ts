@@ -48,13 +48,13 @@ export async function POST(req: Request) {
         <ul>
           ${topErrors.map((e: any) => `<li><b>${e.skill} - ${e.error_type}</b> (${e.occurrences} times)</li>`).join("")}
         </ul>
-        <p>Keep up the great work on your Band 7 Path!</p>
+        <p>Keep up the great work on your Band 9 Path!</p>
       `;
 
       // Mock sending email
       console.log(`[Email Stub] Sending digest to user ${user.id}...`);
       // await resend.emails.send({
-      //   from: 'IELTS Band 7 Path <learning@ieltsband7path.com>',
+      //   from: 'IELTS Band 9 Path <learning@ieltsband7path.com>',
       //   to: [user.email],
       //   subject: 'Your Weekly Error Pattern Digest',
       //   html: htmlContent,

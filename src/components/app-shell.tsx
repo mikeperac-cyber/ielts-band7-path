@@ -117,7 +117,7 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
           </button>
         </div>
 
-        <p className="brand-subtitle">Band 7 Path</p>
+        <p className="brand-subtitle">Band 9 Path</p>
 
         {/* Nav items */}
         <nav className="sidebar-nav">

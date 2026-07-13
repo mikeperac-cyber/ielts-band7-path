@@ -31,7 +31,7 @@ const features: Array<[typeof Headphones, string, string]> = [
 const faqs = [
   [
     "Who is this for?",
-    "Independent IELTS Academic learners currently around Band 6 who want a structured route towards Band 7.",
+    "Independent IELTS Academic learners currently around Band 7.5 who want a structured route towards Band 9.",
   ],
   [
     "What does the free sample include?",
@@ -81,10 +81,10 @@ export default function Home() {
       {/* ── Hero ── */}
       <section className="hero">
         <div className="hero-copy">
-          <h1>Reach Band 7 with a daily plan that tells you exactly what to do.</h1>
+          <h1>Reach Band 9 with a daily plan that tells you exactly what to do.</h1>
           <p>
             A rigorous 10-week Academic IELTS programme for independent learners
-            moving from Band 6 towards Band 7.
+            moving from Band 7 towards Band 9.
           </p>
           <div className="hero-actions">
             <Link className="primary-button" href="/sample/day-1">
@@ -139,11 +139,11 @@ export default function Home() {
       <section id="programme" className="marketing-band">
         <div>
           <span className="section-kicker">A complete study system</span>
-          <h2>70 study days. 20 full mocks. One clear route to Band 7.</h2>
+          <h2>70 study days. 20 full mocks. One clear route to Band 9.</h2>
         </div>
         <p>
           Every day gives you a focused pair of IELTS skills, guided preparation,
-          difficult Band 7+ practice, note-taking space, phrase work, and a specific
+          difficult Band 9+ practice, note-taking space, phrase work, and a specific
           reflection step.
         </p>
       </section>
@@ -154,7 +154,7 @@ export default function Home() {
           <span>01</span>
           <h2>Learn the exact skill</h2>
           <p>
-            Concise notes explain what the examiner rewards and where Band 6 habits
+            Concise notes explain what the examiner rewards and where Band 7.5 habits
             usually limit performance.
           </p>
         </article>
@@ -182,7 +182,7 @@ export default function Home() {
           <span className="section-kicker">Practice that remembers</span>
           <h2>Progress is more than a score.</h2>
           <p>
-            Band 7 requires controlled language, accurate judgement, and consistent
+            Band 9 requires controlled language, accurate judgement, and consistent
             timing. The tracker shows the evidence behind each improvement—not just
             a percentage.
           </p>
@@ -250,7 +250,7 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer className="marketing-footer">
-        <span>© {new Date().getFullYear()} IELTS Academic: Band 7 Path</span>
+        <span>© {new Date().getFullYear()} IELTS Academic: Band 9 Path</span>
         <Link href="/sample/day-1">Free sample</Link>
         <Link href="/sign-in">Sign in</Link>
       </footer>

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
+import { ArrowLeft, LockKeyhole, Hammer } from "lucide-react";
 import { LessonPlayer } from "@/components/lesson-player";
 import { getDayPlan } from "@/lib/course-plan";
+import { getLesson } from "@/lib/lessons";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function LessonPage({ params }: { params: Promise<{ week: string; day: string }> }) {
@@ -17,6 +18,29 @@ export default async function LessonPage({ params }: { params: Promise<{ week: s
       <Link href="/programme" className="primary-button">Open programme</Link>
     </div>
   );
+
+  const lessonData = getLesson(week, day);
+  
+  if (!lessonData) {
+    return (
+      <div className="lesson-page">
+        <div className="lesson-page-banner">
+          <Link href="/programme"><ArrowLeft size={16} /> Programme</Link>
+          <span>Week {week} · Day {day}</span>
+          <strong>{plan.focus}</strong>
+        </div>
+        <div className="empty-state" style={{ marginTop: 80 }}>
+          <Hammer size={32} className="text-muted" />
+          <h2>Content Upcoming</h2>
+          <p style={{ maxWidth: 400, margin: "0 auto 24px" }}>
+            The highly intensive Band 9 materials for this day are currently being curated. 
+            Check back soon!
+          </p>
+          <Link href="/programme" className="primary-button">Return to Programme</Link>
+        </div>
+      </div>
+    );
+  }
 
   let stalePhrases: any[] = [];
   const supabase = await createServerSupabaseClient();
@@ -37,7 +61,7 @@ export default async function LessonPage({ params }: { params: Promise<{ week: s
         <span>Week {week} · Day {day}</span>
         <strong>{plan.focus}</strong>
       </div>
-      <LessonPlayer stalePhrases={stalePhrases} />
+      <LessonPlayer lesson={lessonData} stalePhrases={stalePhrases} />
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function DashboardView({ dailyBrief, userStreak, bandTrajectory, peerComp
       {/* Page intro */}
       <div className="page-intro" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
-          <h1>Your Band 7 Path</h1>
+          <h1>Your Band 9 Path</h1>
           <p>A 10-week programme that turns focused daily practice into measurable improvement.</p>
         </div>
         
@@ -239,10 +239,10 @@ export function DashboardView({ dailyBrief, userStreak, bandTrajectory, peerComp
           }
         />
         <div className="metrics-grid">
-          <Metric label="Listening" value="58%" detail="Band 6.0 → 6.5" icon={Headphones} />
-          <Metric label="Speaking"  value="54%" detail="Band 6.0 → 6.5" icon={Mic2} />
-          <Metric label="Reading"   value="62%" detail="Band 6.0 → 7.0" icon={Search} />
-          <Metric label="Writing"   value="50%" detail="Band 6.0 → 6.5" icon={PenLine} />
+          <Metric label="Listening" value="58%" detail="Band 8.0 → 8.5" icon={Headphones} />
+          <Metric label="Speaking"  value="54%" detail="Band 7.5 → 8.5" icon={Mic2} />
+          <Metric label="Reading"   value="62%" detail="Band 8.0 → 9.0" icon={Search} />
+          <Metric label="Writing"   value="50%" detail="Band 7.0 → 8.0" icon={PenLine} />
         </div>
       </section>
 

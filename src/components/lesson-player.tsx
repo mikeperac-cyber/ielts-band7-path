@@ -22,7 +22,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { sampleLesson } from "@/lib/sample-lesson";
+import { Lesson } from "@/lib/lessons/types";
 import { BandContrastTable } from "./band-contrast-table";
 import { gradeWriting } from "@/actions/grade-writing";
 
@@ -30,6 +30,7 @@ type LessonPlayerProps = {
   sample?: boolean;
   audioSrc?: string;
   stalePhrases?: { phrase: string; skill: string }[];
+  lesson: Lesson;
 };
 
 type LessonSection = "listening" | "speaking" | "study" | "review";
@@ -69,9 +70,9 @@ function Waveform({ playing }: { playing: boolean }) {
   );
 }
 
-export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonPlayerProps) {
+export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }: LessonPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [answers, setAnswers]         = useState<string[]>(Array(sampleLesson.questions.length).fill(""));
+  const [answers, setAnswers]         = useState<string[]>(Array(lesson.questions.length).fill(""));
   const [notes, setNotes]             = useState("");
   const [started, setStarted]         = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -248,7 +249,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
   };
 
   const clearAnswers = () => {
-    setAnswers(Array(sampleLesson.questions.length).fill(""));
+    setAnswers(Array(lesson.questions.length).fill(""));
     setNotes("");
     setMarkedForReview(false);
   };
@@ -414,9 +415,9 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
               <div className="question-notes-grid">
                 <div className="questions-sheet">
                   <div className="question-topic">
-                    Topic: The development of <b>urban green spaces</b>
+                    Topic: <b>{lesson.topic}</b>
                   </div>
-                  {sampleLesson.questions.map((question, index) => (
+                  {lesson.questions.map((question, index) => (
                     <label className="question-row" key={question}>
                       <span>{index + 1}.</span>
                       <p>{question.replace("________", "")}</p>
@@ -436,7 +437,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                       <Bookmark size={16} />
                       {markedForReview ? "Marked" : "Mark for review"}
                     </button>
-                    <span style={{ marginLeft: "auto" }}>Answered: {complete}/{sampleLesson.questions.length}</span>
+                    <span style={{ marginLeft: "auto" }}>Answered: {complete}/{lesson.questions.length}</span>
                     <button type="button" onClick={clearAnswers}>
                       Clear
                     </button>
@@ -471,13 +472,13 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                   <h2>Phrases for Listening</h2>
                   <button
                     type="button"
-                    onClick={() => setSaved(sampleLesson.phrases.map((p) => p.phrase))}
+                    onClick={() => setSaved(lesson.phrases.map((p) => p.phrase))}
                   >
                     <Bookmark size={16} /> Save all
                   </button>
                 </div>
                 <div className="phrase-list">
-                  {sampleLesson.phrases.map((item) => (
+                  {lesson.phrases.map((item) => (
                     <article key={item.phrase}>
                       <Headphones size={22} />
                       <div>
@@ -546,7 +547,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
               <section className="phrase-bank">
                 <div className="phrase-bank-title">
                   <h2>Phrases for Speaking</h2>
-                  <span>Band 7+ control</span>
+                  <span>Band 9+ control</span>
                 </div>
                 {stalePhrases && stalePhrases.length > 0 && (
                   <div style={{ background: "var(--orange-bg)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
@@ -604,10 +605,12 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                 <BookOpen size={22} style={{ color: "#125237", marginBottom: 8 }} />
                 <h2>Today&apos;s transfer task</h2>
                 <p>
-                  Write three original sentences about urban green spaces using:{" "}
-                  <b>it is important to note that</b>,{" "}
-                  <b>this leads to</b>, and{" "}
-                  <b>a good example of this would be</b>.
+                  Write three original sentences based on the lesson&apos;s topic using:{" "}
+                  {lesson.phrases.map((p, i) => (
+                    <span key={i}>
+                      <b>{p.phrase}</b>{i < lesson.phrases.length - 1 ? ", " : "."}
+                    </span>
+                  ))}
                 </p>
                 <div style={{ position: "relative", marginTop: 16 }}>
                   <textarea
@@ -672,7 +675,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
               {finished ? (
                 <>
                   <ol>
-                    {sampleLesson.review.answers.map((answer, index) => (
+                    {lesson.review.answers.map((answer, index) => (
                       <li key={answer}>
                         <b>{index + 1}.</b> {answer}
                       </li>
@@ -680,21 +683,21 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                   </ol>
                   <details>
                     <summary>Show sample transcript and explanation</summary>
-                    <p>{sampleLesson.review.transcript}</p>
+                    <p>{lesson.review.transcript}</p>
                   </details>
                   
-                  {/* Band 6 vs 7 Contrast Table */}
+                  {/* Band 7.5 vs 7 Contrast Table */}
                   <BandContrastTable 
                     contrasts={[
                       {
                         band6: "Parks are good for health.",
                         band7: "Urban green spaces demonstrably improve residents' psychological wellbeing.",
-                        reasoning: "Band 7 uses precise vocabulary ('urban green spaces', 'demonstrably improve') and complex noun phrases ('psychological wellbeing') instead of basic, vague words ('parks', 'good', 'health')."
+                        reasoning: "Band 9 uses precise vocabulary ('urban green spaces', 'demonstrably improve') and complex noun phrases ('psychological wellbeing') instead of basic, vague words ('parks', 'good', 'health')."
                       },
                       {
                         band6: "Cities need parks because they clean the air.",
                         band7: "Parks play a crucial role in mitigating urban air pollution.",
-                        reasoning: "Band 7 employs topic-specific collocation ('mitigating air pollution', 'crucial role') and avoids simplistic causal links ('because they clean')."
+                        reasoning: "Band 9 employs topic-specific collocation ('mitigating air pollution', 'crucial role') and avoids simplistic causal links ('because they clean')."
                       }
                     ]} 
                   />
@@ -766,7 +769,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases }: LessonP
                 : "When you finish listening, the lesson will move into Speaking."}
             </p>
             <button
-              className={`primary-button full${complete === sampleLesson.questions.length && activeSection === "listening" ? " pulse-cta" : ""}`}
+              className={`primary-button full${complete === lesson.questions.length && activeSection === "listening" ? " pulse-cta" : ""}`}
               type="button"
               onClick={
                 activeSection === "speaking"

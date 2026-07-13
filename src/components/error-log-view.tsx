@@ -87,11 +87,11 @@ export function ErrorLogView() {
         </button>
       </div>
 
-      {/* Band 7 rule callout */}
+      {/* Band 9 rule callout */}
       <section className="error-principle">
         <AlertTriangle size={25} />
         <div>
-          <strong>Band 7 rule</strong>
+          <strong>Band 9 rule</strong>
           <p>
             Do not only record the correct answer. Write the cause of the mistake and the
             action that prevents it next time.

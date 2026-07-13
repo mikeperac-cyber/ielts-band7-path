@@ -1,7 +1,9 @@
-export const sampleLesson = {
-  id: "sample-day-1",
+import { Lesson } from "./types";
+
+export const week1day1: Lesson = {
+  id: "week-1-day-1",
   day: "Day 1",
-  title: "Listening + Speaking",
+  title: "Listening + Speaking (Foundations)",
   duration: "90 min",
   topic: "Urban green spaces (Discussion)",
   audioLabel: "Original IELTS Academic Section 3 discussion · 4 min practice",

@@ -19,7 +19,7 @@ const themes = [
   "Grammar range, accuracy, and pronunciation",
   "Hard question types and academic precision",
   "Integrated exam pressure",
-  "Targeted repair and Band 7 consistency",
+  "Targeted repair and Band 9 consistency",
   "Simulation, polishing, and confidence",
 ];
 
