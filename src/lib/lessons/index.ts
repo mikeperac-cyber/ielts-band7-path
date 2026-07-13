@@ -144,7 +144,7 @@ const lessonsMap: Record<string, Lesson> = {
   "week-9-day-7": week9day7,
 };
 
-export function getLesson(week: string, day: string): Lesson | null {
+export function getLesson(week: number, day: number): Lesson | null {
   const key = `week-${week}-day-${day}`;
   return lessonsMap[key] || null;
 }

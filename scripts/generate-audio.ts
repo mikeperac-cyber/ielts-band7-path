@@ -75,7 +75,7 @@ async function main() {
     
     // Extract lessonId and transcript from file content
     const idMatch = content.match(/id:\s*"([^"]+)"/);
-    const transcriptMatch = content.match(/transcript:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|`([^`\\]*(?:\\.[^`\\]*)*)`)/s);
+    const transcriptMatch = content.match(/transcript:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|`([^`\\]*(?:\\.[^`\\]*)*)`)/);
 
     if (idMatch && transcriptMatch) {
       const lessonId = idMatch[1];

@@ -25,7 +25,7 @@ const content = `${imports}
 const lessonsMap: Record<string, Lesson> = {
 ${mapEntries}};
 
-export function getLesson(week: string, day: string): Lesson | null {
+export function getLesson(week: number, day: number): Lesson | null {
   const key = \`week-\${week}-day-\${day}\`;
   return lessonsMap[key] || null;
 }
