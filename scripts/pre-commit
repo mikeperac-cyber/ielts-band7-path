@@ -1,0 +1,24 @@
+#!/bin/bash
+# Git pre-commit hook to prevent MP3 files from being committed
+# Install by running: cp scripts/pre-commit .git/hooks/ && chmod +x .git/hooks/pre-commit
+
+echo "🔍 Checking for audio files..."
+
+# Check if any MP3 files are staged
+if git diff --cached --name-only | grep -E '\.mp3$'; then
+    echo "❌ ERROR: Attempting to commit MP3 files!"
+    echo ""
+    echo "Audio files should not be committed to Git."
+    echo "See AUDIO_MANAGEMENT.md for proper audio file handling."
+    echo ""
+    echo "Staged audio files:"
+    git diff --cached --name-only | grep -E '\.mp3$'
+    echo ""
+    echo "To unstage these files, run:"
+    echo "  git reset HEAD 'public/audio/*.mp3'"
+    echo ""
+    exit 1
+fi
+
+echo "✅ No audio files detected in commit"
+exit 0
