@@ -1,9 +1,6 @@
 import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
-import { week1day1 } from "../src/lib/lessons/week1-day1";
-import { week5day1 } from "../src/lib/lessons/week5-day1";
-import { week10day1 } from "../src/lib/lessons/week10-day1";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -69,11 +66,31 @@ async function generateMultiVoiceAudio(lessonId: string, transcript: string) {
 }
 
 async function main() {
-  const lessons = [week1day1, week5day1, week10day1];
-  
-  for (const lesson of lessons) {
-    if (lesson.review && lesson.review.transcript) {
-      await generateMultiVoiceAudio(lesson.id, lesson.review.transcript);
+  const lessonsDir = path.join(process.cwd(), "src", "lib", "lessons");
+  const files = fs.readdirSync(lessonsDir).filter(f => f.match(/^week\d+-day\d+\.ts$/));
+
+  for (const file of files) {
+    const filePath = path.join(lessonsDir, file);
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    // Extract lessonId and transcript from file content
+    const idMatch = content.match(/id:\s*"([^"]+)"/);
+    const transcriptMatch = content.match(/transcript:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|`([^`\\]*(?:\\.[^`\\]*)*)`)/s);
+
+    if (idMatch && transcriptMatch) {
+      const lessonId = idMatch[1];
+      let transcript = transcriptMatch[1] || transcriptMatch[2];
+      
+      // Unescape newlines
+      transcript = transcript.replace(/\\n/g, "\n");
+
+      const outputPath = path.join(process.cwd(), "public", "audio", `${lessonId}.mp3`);
+      if (fs.existsSync(outputPath)) {
+        console.log(`Audio for ${lessonId} already exists. Skipping.`);
+        continue;
+      }
+
+      await generateMultiVoiceAudio(lessonId, transcript);
     }
   }
 }
