@@ -61,7 +61,7 @@ export default async function LessonPage({ params }: { params: Promise<{ week: s
         <span>Week {week} · Day {day}</span>
         <strong>{plan.focus}</strong>
       </div>
-      <LessonPlayer lesson={lessonData} stalePhrases={stalePhrases} />
+      <LessonPlayer lesson={lessonData} stalePhrases={stalePhrases} audioSrc={`/audio/${lessonData.id}.mp3`} />
     </div>
   );
 }

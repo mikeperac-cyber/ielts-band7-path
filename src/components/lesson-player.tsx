@@ -19,12 +19,14 @@ import {
   FlaskConical,
   Star,
   Loader2,
-  Sparkles
+  Sparkles,
+  Square
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Lesson } from "@/lib/lessons/types";
 import { BandContrastTable } from "./band-contrast-table";
 import { gradeWriting } from "@/actions/grade-writing";
+import { transcribeAndGradeSpeaking } from "@/actions/transcribe-speaking";
 
 type LessonPlayerProps = {
   sample?: boolean;
@@ -96,6 +98,12 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
   const [readingTimeRemaining, setReadingTimeRemaining] = useState(30);
   const [aiFeedback, setAiFeedback] = useState("");
   const [aiBand, setAiBand] = useState<number | null>(null);
+
+  // Speaking Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [speakingResult, setSpeakingResult] = useState<any>(null);
 
   const complete = useMemo(() => answers.filter(Boolean).length, [answers]);
   const source   = audioSrc ?? demoListeningAudio;
@@ -258,6 +266,58 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
     setSaved((all) =>
       all.includes(phrase) ? all.filter((p) => p !== phrase) : [...all, phrase]
     );
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        await handleAudioUpload(blob);
+      };
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      // Reset timer if we are starting fresh
+      setElapsedSeconds(0);
+      setStarted(true);
+    } catch (err) {
+      console.error("Microphone access denied", err);
+      alert("Microphone access denied or not available. Please allow microphone permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      setIsRecording(false);
+    }
+  };
+
+  const handleAudioUpload = async (blob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append("audio", blob, "recording.webm"); 
+      
+      const res = await transcribeAndGradeSpeaking(formData, elapsedSeconds || 1);
+      if (res.success) {
+        setSpeakingResult(res);
+      } else {
+        alert("Error grading response: " + (res.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An unexpected error occurred during transcription.");
+    } finally {
+      setIsTranscribing(false);
+    }
   };
 
   // Audio seek slider progress CSS variable
@@ -521,9 +581,38 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                     You should say where it is, what people do there, why it is useful,
                     and explain how it could be improved.
                   </p>
-                  <button className="primary-button" type="button" onClick={startTimer}>
-                    <Play size={17} fill="currentColor" /> Start speaking timer
-                  </button>
+                  
+                  {isTranscribing ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", background: "var(--blue-2)", borderRadius: 8, color: "var(--blue)", fontWeight: 600 }}>
+                      <Loader2 size={18} className="animate-spin" /> Analyzing your pronunciation & grammar...
+                    </div>
+                  ) : speakingResult ? (
+                    <div style={{ padding: 16, background: "var(--wash)", border: "1px solid var(--blue)", borderRadius: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                        <div style={{ background: "var(--blue)", color: "#fff", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: "bold" }}>
+                          {speakingResult.gradeResult.estimatedBand?.overall ?? "?"}
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: 16, color: "var(--navy)" }}>Speaking Analysis</h3>
+                      </div>
+                      <p style={{ fontSize: 13, color: "var(--muted)", fontStyle: "italic", marginBottom: 12 }}>
+                        "{speakingResult.transcript}"
+                      </p>
+                      <p style={{ margin: 0, color: "var(--text)", fontSize: 14, whiteSpace: "pre-wrap" }}>
+                        {speakingResult.gradeResult.feedback}
+                      </p>
+                      <button className="outline-button" style={{ marginTop: 16, width: "100%" }} onClick={() => setSpeakingResult(null)}>
+                        Record Again
+                      </button>
+                    </div>
+                  ) : isRecording ? (
+                    <button className="primary-button" style={{ background: "var(--red)", border: "none" }} type="button" onClick={stopRecording}>
+                      <Square size={17} fill="currentColor" /> Stop & Analyze ({formatTime(elapsedSeconds)})
+                    </button>
+                  ) : (
+                    <button className="primary-button" type="button" onClick={startRecording}>
+                      <Mic2 size={17} /> Record Answer
+                    </button>
+                  )}
                 </article>
                 <article className="speaking-card">
                   <PenLine size={24} />
