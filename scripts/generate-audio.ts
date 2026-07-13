@@ -71,22 +71,22 @@ async function main() {
 
   for (const file of files) {
     const filePath = path.join(lessonsDir, file);
-    const content = fs.readFileSync(filePath, "utf-8");
     
-    // Extract lessonId and transcript from file content
-    const idMatch = content.match(/id:\s*"([^"]+)"/);
-    const transcriptMatch = content.match(/transcript:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|`([^`\\]*(?:\\.[^`\\]*)*)`)/);
+    // Dynamically import the module
+    const fileUrl = "file://" + filePath.replace(/\\/g, "/");
+    const module = await import(fileUrl);
+    
+    // Find the lesson object (usually the only exported value)
+    const exportName = Object.keys(module)[0];
+    const lesson = module[exportName];
 
-    if (idMatch && transcriptMatch) {
-      const lessonId = idMatch[1];
-      let transcript = transcriptMatch[1] || transcriptMatch[2];
+    if (lesson && lesson.id && lesson.review && lesson.review.transcript) {
+      const lessonId = lesson.id;
+      const transcript = lesson.review.transcript;
       
-      // Unescape newlines
-      transcript = transcript.replace(/\\n/g, "\n");
-
-      const outputPath = path.join(process.cwd(), "public", "audio", `${lessonId}.mp3`);
+      const outputPath = path.join(process.cwd(), "public", "audio", lessonId + ".mp3");
       if (fs.existsSync(outputPath)) {
-        console.log(`Audio for ${lessonId} already exists. Skipping.`);
+        console.log("Audio for " + lessonId + " already exists. Skipping.");
         continue;
       }
 
