@@ -7,9 +7,12 @@ const openai = new OpenAI({
 });
 
 // Available OpenAI Voices: alloy, echo, fable, onyx, nova, shimmer
-// Onyx and Fable tend to sound slightly more British/Transatlantic.
-const availableVoices: ("onyx" | "fable" | "shimmer" | "echo" | "nova" | "alloy")[] = [
-  "onyx", "fable", "shimmer", "echo", "nova", "alloy"
+// The user explicitly requested STRICTLY British accents.
+// - Onyx: Deep, authoritative, British/Transatlantic.
+// - Fable: British, friendly, animated.
+// - Echo: Neutral, slightly British/Transatlantic.
+const availableVoices: ("onyx" | "fable" | "echo")[] = [
+  "onyx", "fable", "echo"
 ];
 
 async function generateMultiVoiceAudio(lessonId: string, transcript: string) {

@@ -85,7 +85,9 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
   const [audioTime, setAudioTime]     = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState<(typeof playbackRates)[number]>(1);
-  const [audioError, setAudioError]   = useState("");
+  const [audioError, setAudioError] = useState("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const introAudioRef = useRef<HTMLAudioElement | null>(null);
   const [showNotes, setShowNotes]     = useState(true);
   const [markedForReview, setMarkedForReview] = useState(false);
   const [activeSection, setActiveSection] = useState<LessonSection>("listening");
@@ -94,6 +96,9 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
   const [isSavingStudy, setIsSavingStudy] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  
+  const [introFinished, setIntroFinished] = useState(false);
+  const [introPlaying, setIntroPlaying] = useState(false);
   const [readingTimeActive, setReadingTimeActive] = useState(false);
   const [readingTimeRemaining, setReadingTimeRemaining] = useState(30);
   const [aiFeedback, setAiFeedback] = useState("");
@@ -178,24 +183,41 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
   const startTimer = () => setStarted(true);
 
   const togglePlayback = async () => {
-    const audio = audioRef.current;
-    if (!audio || !source) {
-      setAudioError("This lesson's audio is not available until its private course release has been published.");
-      return;
-    }
-    setAudioError("");
     startTimer();
 
-    // Handle Reading Time Gap
-    if (readingTimeRemaining > 0 && !readingTimeActive && !isPlaying && activeSection === "listening") {
-      setReadingTimeActive(true);
+    // Handle Intro + Reading Time Gap
+    if (!introFinished && activeSection === "listening") {
+      // If we're already playing the intro or reading time is active, user clicked 'Skip'
+      if (introPlaying || readingTimeActive) {
+        introAudioRef.current?.pause();
+        setIntroPlaying(false);
+        setIntroFinished(true);
+        setReadingTimeActive(false);
+        setReadingTimeRemaining(0);
+        // Play main audio immediately
+        if (audioRef.current && audioRef.current.paused) {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        }
+        return;
+      }
+
+      // Start playing intro audio first
+      if (introAudioRef.current) {
+        try {
+          await introAudioRef.current.play();
+          setIntroPlaying(true);
+        } catch (e) {
+          // If audio context blocked, fallback to reading time immediately
+          setIntroPlaying(false);
+          setReadingTimeActive(true);
+        }
+      }
       return;
     }
-    if (readingTimeActive) {
-      // Skip reading time if they click while active
-      setReadingTimeActive(false);
-      setReadingTimeRemaining(0);
-    }
+
+    if (!audioRef.current) return;
+    const audio = audioRef.current;
 
     try {
       if (audio.paused) {
@@ -378,12 +400,11 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
         {/* Main content area */}
         <section
           className="lesson-paper"
-          id={`section-${activeSection}`}
+          id={`section-listening`}
           role="tabpanel"
-          aria-label={`${activeSection} section`}
+          aria-label={`listening section`}
+          hidden={activeSection !== "listening"}
         >
-          {/* ── LISTENING ── */}
-          {activeSection === "listening" && (
             <>
               <span className="eyebrow">LISTENING · SECTION 4</span>
               <h1>Listening — Note completion</h1>
@@ -391,6 +412,19 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                 You will hear part of a lecture. Complete the notes below.{" "}
                 Write <b>ONE WORD ONLY</b> for each answer.
               </p>
+
+              {/* Intro Audio Element */}
+              <audio
+                ref={introAudioRef}
+                className="audio-element-intro"
+                preload="metadata"
+                src="/audio/intro.mp3"
+                onEnded={() => {
+                  setIntroPlaying(false);
+                  setIntroFinished(true);
+                  setReadingTimeActive(true); // Start visual 30s timer after intro speaks
+                }}
+              />
 
               {/* Hidden HTML audio element */}
               {source && (
@@ -419,15 +453,15 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                   className="audio-play"
                   type="button"
                   onClick={togglePlayback}
-                  aria-label={readingTimeActive ? "Skip reading time" : isPlaying ? "Pause" : "Play"}
+                  aria-label={introPlaying || readingTimeActive ? "Skip reading time" : isPlaying ? "Pause" : "Play"}
                 >
-                  {readingTimeActive ? <SkipForward size={22} fill="currentColor" /> : isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
+                  {introPlaying || readingTimeActive ? <SkipForward size={22} fill="currentColor" /> : isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
                 </button>
 
                 {/* Waveform + seek or Reading Time */}
-                {readingTimeActive ? (
+                {introPlaying || readingTimeActive ? (
                   <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--blue-2)", color: "var(--blue)", padding: "0 16px", borderRadius: 99, fontSize: 13, fontWeight: 700, border: "1px solid var(--blue)", height: 32 }}>
-                    <span>Reading time: {readingTimeRemaining}s remaining</span>
+                    <span>{introPlaying ? "Listen to the instructions..." : `Reading time: ${readingTimeRemaining}s remaining`}</span>
                     <button onClick={togglePlayback} style={{ color: "var(--blue)", textDecoration: "underline", fontSize: 12 }}>Skip</button>
                   </div>
                 ) : (
@@ -561,11 +595,16 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                 </div>
               </section>
             </>
-          )}
+        </section>
 
           {/* ── SPEAKING ── */}
-          {activeSection === "speaking" && (
-            <section className="speaking-section">
+          <section
+            className="speaking-section lesson-paper"
+            id={`section-speaking`}
+            role="tabpanel"
+            aria-label={`speaking section`}
+            hidden={activeSection !== "speaking"}
+          >
               <span className="eyebrow">SPEAKING · PARTS 2–3</span>
               <h1>Speaking — Develop and justify ideas</h1>
               <p className="lead">
@@ -678,12 +717,16 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                   ))}
                 </div>
               </section>
-            </section>
-          )}
+          </section>
 
           {/* ── STUDY ── */}
-          {activeSection === "study" && (
-            <section className="study-section">
+          <section
+            className="study-section lesson-paper"
+            id={`section-study`}
+            role="tabpanel"
+            aria-label={`study section`}
+            hidden={activeSection !== "study"}
+          >
               <span className="eyebrow">STUDY · TRANSFER</span>
               <h1>Study — Turn answers into reusable language</h1>
               <p className="lead">
@@ -711,7 +754,7 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                   />
                   <div style={{ position: "absolute", bottom: 12, right: 12, display: "flex", gap: 12, alignItems: "center" }}>
                     {lastSaved && (
-                      <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                       <span style={{ fontSize: 12, color: "var(--muted)" }}>
                         Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
@@ -753,12 +796,16 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                   </div>
                 )}
               </div>
-            </section>
-          )}
+          </section>
 
           {/* ── REVIEW ── */}
-          {activeSection === "review" && (
-            <section className="review-reveal">
+          <section
+            className="review-reveal lesson-paper"
+            id={`section-review`}
+            role="tabpanel"
+            aria-label={`review section`}
+            hidden={activeSection !== "review"}
+          >
               <span className="eyebrow">{finished ? "ATTEMPT COMPLETE" : "REVIEW LOCKED"}</span>
               <h2>{finished ? "Review your answers" : "Finish the listening attempt first"}</h2>
               {finished ? (
@@ -801,13 +848,16 @@ export function LessonPlayer({ sample = false, audioSrc, stalePhrases, lesson }:
                   </button>
                 </>
               ) : (
-                <p>
-                  Complete the listening task and click <b>Finish attempt</b>. The answer key,
-                  transcript, and speaking bridge will then open.
-                </p>
+                <div style={{ marginTop: 20 }}>
+                  <p style={{ color: "var(--muted)", marginBottom: 20 }}>
+                    You must finish the listening audio and submit your answers to unlock the answer key, full transcript, and Band 9 analysis.
+                  </p>
+                  <button className="primary-button" type="button" onClick={finishAttempt}>
+                    Submit attempt early
+                  </button>
+                </div>
               )}
-            </section>
-          )}
+          </section>
         </section>
 
         {/* ── RAIL ── */}
