@@ -27,7 +27,7 @@ export function BandContrastTable({ contrasts }: BandContrastTableProps) {
               <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
                 <XCircle size={14} color="var(--red)" /> BAND 6.0
               </div>
-              <p style={{ margin: 0, fontSize: 14 }}>"{item.band6}"</p>
+              <p style={{ margin: 0, fontSize: 14 }}>“{item.band6}”</p>
             </div>
             
             <div style={{ display: "flex", alignItems: "center", color: "var(--border)" }}>
@@ -38,7 +38,7 @@ export function BandContrastTable({ contrasts }: BandContrastTableProps) {
               <div style={{ color: "var(--green)", fontSize: 12, fontWeight: 700, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
                 <CheckCircle2 size={14} /> BAND 9.0+
               </div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>"{item.band7}"</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>“{item.band7}”</p>
             </div>
             
             <div style={{ gridColumn: "1 / -1", fontSize: 13, color: "var(--text)", background: "white", padding: "8px 12px", borderRadius: 6, borderLeft: "3px solid var(--blue)", marginTop: 8 }}>

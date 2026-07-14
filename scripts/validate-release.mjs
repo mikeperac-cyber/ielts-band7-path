@@ -1,28 +1,28 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const manifestPath = process.env.COURSE_MANIFEST_PATH ?? path.join(process.cwd(), ".private-course", "release.json");
-
-try {
-  const release = JSON.parse(await fs.readFile(manifestPath, "utf8"));
-  const problems = [];
-  if (release.rights !== "original-ielts-style") problems.push("rights must equal 'original-ielts-style'.");
-  if (!Array.isArray(release.lessons) || release.lessons.length !== 70) problems.push("release.lessons must contain exactly 70 lessons.");
-  const mocks = release.lessons?.filter((lesson) => lesson.isMock) ?? [];
-  if (mocks.length !== 20) problems.push("release must contain exactly 20 full mocks.");
-  for (const lesson of release.lessons ?? []) {
-    if (!lesson.slug || !lesson.contentFile || !lesson.reviewFile) problems.push(`Lesson ${lesson.day ?? "unknown"} is missing slug, contentFile, or reviewFile.`);
-    if (!lesson.isMock && (!Array.isArray(lesson.skills) || lesson.skills.length !== 2)) problems.push(`Lesson ${lesson.day ?? "unknown"} must target exactly two skills.`);
-    if (lesson.isMock && (!Array.isArray(lesson.skills) || lesson.skills.length !== 4)) problems.push(`Mock ${lesson.day ?? "unknown"} must include all four skills.`);
-    if (!Array.isArray(lesson.audioFiles) || lesson.audioFiles.length === 0) problems.push(`Lesson ${lesson.day ?? "unknown"} has no MP3 audio mapping.`);
+const root = path.resolve(process.env.COURSE_SOURCE_DIR ?? path.join(process.cwd(), ".private-course"));
+const release = JSON.parse(await fs.readFile(path.join(root, "release.json"), "utf8"));
+const problems = [];
+if (release.product !== "IELTS Academic Band 9 Path" || release.version !== 2) problems.push("Release must be Band 9 CourseLessonV2.");
+if (release.rights !== "original-ielts-style") problems.push("Invalid content rights marker.");
+if (!release.generatedWithoutPaidAi) problems.push("Release must declare zero paid build-time AI usage.");
+if (!Array.isArray(release.lessons) || release.lessons.length !== 70) problems.push("Release must contain exactly 70 lessons.");
+if (release.lessons?.filter((lesson) => lesson.assessmentKind === "diagnostic").length !== 20) problems.push("Release must contain 20 diagnostic checkpoints.");
+for (const lesson of release.lessons ?? []) {
+  const content = JSON.parse(await fs.readFile(path.join(root, lesson.contentFile), "utf8"));
+  const review = JSON.parse(await fs.readFile(path.join(root, lesson.reviewFile), "utf8"));
+  if (content.schemaVersion !== 2 || content.globalDay !== lesson.day || content.localDay !== lesson.localDay) problems.push(`${lesson.slug}: invalid V2 identity.`);
+  if (content.activities.length !== content.skills.length) problems.push(`${lesson.slug}: activity/skill mismatch.`);
+  for (const activity of content.activities) {
+    if (["listening", "reading"].includes(activity.kind) && review.activityReviews?.[activity.id]?.acceptableAnswers?.length !== activity.questions.length) problems.push(`${activity.id}: question/answer mismatch.`);
   }
-  if (problems.length) throw new Error(problems.join("\n"));
-  console.log(`Validated ${release.lessons.length} lessons and ${mocks.length} full mocks from ${manifestPath}.`);
-} catch (error) {
-  if (error.code === "ENOENT") {
-    console.log("No private course release found; public-code validation skipped. Set COURSE_MANIFEST_PATH in the private publishing environment to validate a release.");
-  } else {
-    console.error(`Course release validation failed:\n${error.message}`);
-    process.exitCode = 1;
+  for (const audio of lesson.audioFiles ?? []) {
+    const bytes = await fs.readFile(path.join(root, audio.file));
+    const actual = createHash("sha256").update(bytes).digest("hex");
+    if (actual !== audio.sha256) problems.push(`${audio.file}: checksum mismatch.`);
   }
 }
+if (problems.length) throw new Error(`Private release validation failed:\n${problems.join("\n")}`);
+console.log("Validated private V2 release: 70 lessons, 20 diagnostics, and zero audio checksum changes.");

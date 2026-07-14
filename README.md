@@ -1,41 +1,38 @@
-# IELTS Academic: Band 7 Path
+# IELTS Academic Band 9 Path
 
-A Vercel-ready, responsive Next.js study platform for a 10-week IELTS Academic Band 6 to Band 7 programme.
+A protected 10-week IELTS Academic preparation system for learners progressing from roughly Band 7–7.5 towards Band 9 performance. Band 9 describes the expected quality of learner performance—not obscure topics, rare vocabulary, or an unofficial score claim.
 
-## What is public and what is private
+## Content and audio protection
 
-This public repository contains the platform code, database migrations, release tooling, and a public sample lesson. It deliberately excludes the commercial 70-day course, answer keys, transcripts, and MP3 recordings.
+Supabase is the production source of truth for authenticated curriculum delivery. Only the landing page and public Day 1 sample are available without an account; protected routes fail closed when Supabase is unavailable.
 
-Private course files live in `.private-course/`, which is Git-ignored. The publishing script uploads question payloads and MP3s into private Supabase Storage and stores answer keys/transcripts in the private schema.
+The 70 course MP3s, `intro.mp3`, and `sample-listening.mp3` are immutable. Their SHA-256 fingerprints are recorded in `audio-checksums.sha256`. `npm run audio:verify` fails on any missing or altered recording. Listening generation scripts are deliberately disabled.
 
-## Local setup
-
-1. Copy `.env.example` to `.env.local` and add your Supabase project URL and anonymous key.
-2. Run the migration in `supabase/migrations/20260712_001_initial_schema.sql` through the Supabase SQL editor or CLI.
-3. In Supabase Auth, enable email magic links and set the redirect URL to `http://localhost:3000/auth/callback` for development.
-4. Run `npm run dev`.
-
-Without Supabase variables, the public sample and visual app preview still work. Protected routes become fully enforced once the variables are set.
-
-## Private course publishing
-
-Create `.private-course/release.json` with `rights: "original-ielts-style"`, 70 lesson entries, 20 `isMock: true` entries, JSON question/review paths, and MP3 paths. Then run:
+The ignored `.private-course/` package is the release and recovery source. Build it without paid AI calls:
 
 ```bash
-npm run content:validate
-npm run content:publish
+npm run content:build-private
+npm run content:validate-private
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is only for this local/private publishing task. Never put it in Vercel or browser code.
+Apply all three SQL migrations, set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and the local-only `SUPABASE_SERVICE_ROLE_KEY`, then publish with `npm run content:publish`. Publishing uploads to private Storage and downloads every MP3 again to verify its checksum. Do not remove course MP3s from `public/audio` until authenticated playback has passed in the target environment.
 
-## Vercel and GitHub
+## Assessment scope
 
-1. Create a public GitHub repository from this folder and push `main`.
-2. Import the repository in Vercel. Vercel detects Next.js automatically.
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to Vercel for Production and Preview.
-4. In Supabase Auth, add your Vercel domain and preview callback domains to the allowed redirect URLs.
-5. Push a branch or open a pull request to receive a Vercel preview; merge to `main` for production.
+- Writing uses the four public IELTS criteria and returns an unofficial practice estimate.
+- Speaking AI assesses only Fluency and Coherence, Lexical Resource, and Grammatical Range and Accuracy. Pronunciation is shown as “not assessed”; no official overall Speaking band is calculated.
+- Short Reading and Listening drills report raw accuracy and error categories, not a band.
+- Existing checkpoint days are labelled timed diagnostics. Complete full mocks remain deferred.
+- Paid assessment requires authentication and is limited atomically to five Writing and five Speaking requests per learner per day.
 
-Use Node 22 or newer in Vercel. The repository declares this in `package.json`.
+## Development and release checks
 
-The workflow in `.github/workflows/quality.yml` runs linting, type checks, and public release-tool validation. Vercel’s Git integration handles production and preview deployments.
+Use Node 22 or newer.
+
+```bash
+npm run check
+npm run build
+npm run test:e2e
+```
+
+The check suite verifies immutable audio, all 70 CourseLessonV2 payloads, global/local day mapping, 50 regular lessons, 20 diagnostics, protected review pairs, lint, and strict TypeScript.

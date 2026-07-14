@@ -2,12 +2,15 @@ export type Skill = "Listening" | "Reading" | "Writing" | "Speaking";
 
 export type DayPlan = {
   week: number;
+  /** Global programme day (1–70). */
   day: number;
+  /** Day within the week (1–7). */
+  localDay: number;
   focus: string;
   skills: Skill[];
   duration: string;
   isMock: boolean;
-  mockLabel?: string;
+  diagnosticLabel?: string;
 };
 
 const themes = [
@@ -42,24 +45,30 @@ export const programme: DayPlan[] = Array.from({ length: 10 }, (_, weekIndex) =>
       return {
         week,
         day,
+        localDay: dayIndex + 1,
         focus: harder
-          ? `Harder ${themes[weekIndex].toLowerCase()} simulation`
+          ? `Harder ${themes[weekIndex].toLowerCase()} diagnostic`
           : `${themes[weekIndex]} performance check`,
         skills: ["Listening", "Reading", "Writing", "Speaking"] as Skill[],
         duration: "2 h 45 min",
         isMock: true,
-        mockLabel: `Full Mock ${week * 2 - (harder ? 0 : 1)}${harder ? " · harder" : ""}`,
+        diagnosticLabel: `Timed diagnostic ${week * 2 - (harder ? 0 : 1)}${harder ? " · harder" : ""}`,
       };
     }
 
     const regularIndex = dayIndex < 2 ? dayIndex : dayIndex - 1;
     const pattern = regularDays[regularIndex];
-    return { week, day, ...pattern, duration: "90–120 min", isMock: false };
+    return { week, day, localDay: dayIndex + 1, ...pattern, duration: "90–120 min", isMock: false };
   });
 }).flat();
 
 export function getDayPlan(week: number, day: number) {
   return programme.find((item) => item.week === week && item.day === day);
+}
+
+export function toLocalDay(week: number, globalDay: number) {
+  const localDay = globalDay - (week - 1) * 7;
+  return Number.isInteger(localDay) && localDay >= 1 && localDay <= 7 ? localDay : null;
 }
 
 export const weeklyThemes = themes;

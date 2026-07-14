@@ -1,93 +1,26 @@
-"use server";
+import "server-only";
 
-import { createServerSupabaseClient as createClient } from "@/lib/supabase/server";
-import { generateObject } from "ai";
 import { deepseek } from "@ai-sdk/deepseek";
+import { generateObject } from "ai";
 import { z } from "zod";
+import { isValidHalfBand } from "@/lib/assessment";
 
-export async function gradeSpeaking(transcript: string, durationSeconds: number) {
-  const wordCount = transcript.trim().split(/\s+/).length;
-  const wpm = Math.round((wordCount / durationSeconds) * 60) || 0;
-  const fillerCount = (transcript.match(/\b(um|uh|like|you know)\b/gi) || []).length;
+const halfBand = z.number().refine(isValidHalfBand, "Score must be 0–9 in half-band increments.");
+export const speakingAssessmentSchema = z.object({
+  criteria: z.object({ fluencyCoherence: halfBand, lexicalResource: halfBand, grammaticalRangeAccuracy: halfBand }),
+  evidence: z.array(z.object({ criterion: z.string(), excerpt: z.string().max(240), explanation: z.string().max(600) })).min(3).max(7),
+  strengths: z.array(z.string().max(400)).min(1).max(4),
+  limitingFeatures: z.array(z.string().max(500)).min(1).max(4),
+  nextActions: z.array(z.string().max(500)).length(2),
+  feedback: z.string().max(1200),
+});
 
-  if (wordCount < 10) {
-    return {
-      success: false,
-      estimatedBand: null,
-      feedback: "Response is too short to accurately assess. Please speak more.",
-      wpm,
-      fillerCount
-    };
-  }
-
-  try {
-    // 1. Call DeepSeek for AI Grading
-    const { object } = await generateObject({
-      model: deepseek("deepseek-chat"),
-      system: `You are an expert IELTS examiner. Grade the following spoken transcript based on Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation (inferred from transcript text if possible). 
-You must be strictly accurate to the official IELTS Band 9 criteria.
-Provide an overall band score (e.g. 6.5, 7.0), sub-scores, and constructive feedback focusing on how to improve to a Band 9 or higher.`,
-      prompt: `Transcript: ${transcript}\nDuration: ${durationSeconds} seconds\nWords per minute: ${wpm}\nFiller words detected: ${fillerCount}`,
-      schema: z.object({
-        overall: z.number().describe("The overall band score (0 to 9, in 0.5 increments)."),
-        fluency: z.number(),
-        lexical: z.number(),
-        grammar: z.number(),
-        pronunciation: z.number(),
-        feedback: z.string().describe("Detailed feedback on how to improve to Band 9+.")
-      }),
-    });
-
-    const estimatedBand = {
-      overall: object.overall,
-      fluency: object.fluency,
-      lexical: object.lexical,
-      grammar: object.grammar,
-      pronunciation: object.pronunciation,
-    };
-    const feedback = object.feedback;
-
-    // 2. Save to Supabase Database
-    const supabase = await createClient();
-    if (!supabase) {
-      return {
-        success: false,
-        estimatedBand: null,
-        feedback: "Supabase client not configured.",
-        wpm,
-        fillerCount
-      };
-    }
-    const { data: userData } = await supabase.auth.getUser();
-
-    if (userData?.user) {
-      await supabase.from("speaking_recordings").insert({
-        user_id: userData.user.id,
-        storage_path: "mock-storage-path", // Normally we would upload audio first and get this path
-        duration_seconds: durationSeconds,
-        transcript: transcript,
-        estimated_band: estimatedBand,
-        filler_count: fillerCount,
-        words_per_minute: wpm,
-      });
-    }
-
-    // 3. Return to client
-    return {
-      success: true,
-      estimatedBand,
-      feedback,
-      wpm,
-      fillerCount
-    };
-  } catch (error) {
-    console.error("AI Grading Error:", error);
-    return {
-      success: false,
-      estimatedBand: null,
-      feedback: "An error occurred while grading your response. Please try again later.",
-      wpm,
-      fillerCount
-    };
-  }
+export async function gradeSpeakingTranscript(transcript: string, metrics: { durationSeconds: number; wordsPerMinute: number; pauseCount: number }) {
+  const { object } = await generateObject({
+    model: deepseek("deepseek-chat"),
+    schema: speakingAssessmentSchema,
+    system: "Assess only Fluency and Coherence, Lexical Resource, and Grammatical Range and Accuracy against the public IELTS Speaking descriptors. Do not infer or score pronunciation from a transcript. Do not calculate an overall Speaking band. Use half-band increments, cite transcript evidence, and return exactly two concrete next actions. Label the result as partial and unofficial in the feedback. Use British English while accepting consistent standard English variants.",
+    prompt: `Transcript:\n${transcript}\n\nMeasured duration: ${metrics.durationSeconds}s\nRate: ${metrics.wordsPerMinute} words/min\nPauses over 0.8s between timestamped segments: ${metrics.pauseCount}`,
+  });
+  return speakingAssessmentSchema.parse(object);
 }

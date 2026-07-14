@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ielts-band7-v1';
+const CACHE_NAME = 'ielts-band9-v2';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {
@@ -9,7 +9,7 @@ self.addEventListener('install', (event) => {
       await cache.addAll([
         '/',
         '/offline',
-        '/icon.png',
+        '/icon.svg',
         '/sample-listening.mp3'
       ]);
     })()
@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
           
           const networkResponse = await fetch(event.request);
           return networkResponse;
-        } catch (error) {
+        } catch {
           const cache = await caches.open(CACHE_NAME);
           const cachedResponse = await cache.match(OFFLINE_URL);
           return cachedResponse;
@@ -57,34 +57,8 @@ self.addEventListener('fetch', (event) => {
       })()
     );
   } else {
-    // Stale-while-revalidate for assets
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(CACHE_NAME);
-        const cachedResponse = await cache.match(event.request);
-        if (cachedResponse) {
-          // Fetch update in background
-          event.waitUntil(
-            fetch(event.request).then((networkResponse) => {
-              if (networkResponse.ok) {
-                cache.put(event.request, networkResponse.clone());
-              }
-            }).catch(() => {}) // Ignore background fetch errors
-          );
-          return cachedResponse;
-        }
-        
-        try {
-          const networkResponse = await fetch(event.request);
-          if (networkResponse.ok && event.request.method === 'GET' && !event.request.url.includes('/api/')) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        } catch (error) {
-          // If offline and not in cache, let it fail natively for non-navigation requests
-          throw error;
-        }
-      })()
-    );
+    // Never cache versioned build chunks, API responses, signed media, or protected course data.
+    // The install list above is the complete offline asset allow-list.
+    event.respondWith(fetch(event.request));
   }
 });
