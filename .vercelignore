@@ -1,0 +1,17 @@
+# Local recovery/source packages must never enter a Vercel deployment.
+.private-course/
+.course-release/
+
+# Authenticated course audio is delivered from private Supabase Storage.
+# Keep only public/audio/intro.mp3 and public/sample-listening.mp3 on Vercel.
+public/audio/week-*.mp3
+
+# Local-only build, dependency, repository, and secret material.
+.git/
+.next/
+.vercel/
+node_modules/
+.env*
+coverage/
+playwright-report/
+test-results/

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="IELTS Academic Band 9 Path">
+  <rect width="512" height="512" rx="96" fill="#203a52"/>
+  <path d="M118 122h118c31 0 55 12 72 34 17-22 41-34 72-34h14v251h-14c-34 0-58 11-72 33-14-22-38-33-72-33H118V122Z" fill="#fff"/>
+  <path d="M308 156v250M146 174h90c27 0 50 9 72 28M146 231h90c27 0 50 9 72 28M146 288h90c27 0 50 9 72 28" fill="none" stroke="#1a8fe0" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="390" cy="122" r="70" fill="#f59e0b"/><text x="390" y="148" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="76" fill="#203a52">9</text>
+</svg>

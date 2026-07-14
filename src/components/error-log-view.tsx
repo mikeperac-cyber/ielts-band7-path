@@ -1,37 +1,17 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 type Skill = "Listening" | "Reading" | "Writing" | "Speaking";
 
-interface ErrorEntry {
+export interface ErrorEntry {
+  id?: string;
   skill: Skill;
   type: string;
   mistake: string;
   rule: string;
 }
-
-const starterErrors: ErrorEntry[] = [
-  {
-    skill:   "Listening",
-    type:    "Distractor",
-    mistake: "Selected the first date mentioned",
-    rule:    "Wait for the speaker's final correction.",
-  },
-  {
-    skill:   "Writing",
-    type:    "Task response",
-    mistake: "Ideas did not address both parts",
-    rule:    "Underline every task requirement before planning.",
-  },
-  {
-    skill:   "Reading",
-    type:    "Evidence",
-    mistake: "Chose a related sentence, not the answer",
-    rule:    "Locate and paraphrase the exact evidence.",
-  },
-];
 
 const SKILL_CLASS: Record<Skill, string> = {
   Listening: "listening",
@@ -40,8 +20,8 @@ const SKILL_CLASS: Record<Skill, string> = {
   Speaking:  "speaking",
 };
 
-export function ErrorLogView() {
-  const [errors, setErrors] = useState<ErrorEntry[]>(starterErrors);
+export function ErrorLogView({ initialErrors }: { initialErrors: ErrorEntry[] }) {
+  const [errors, setErrors] = useState<ErrorEntry[]>(initialErrors);
   const [open,   setOpen]   = useState(false);
   const [draft,  setDraft]  = useState<ErrorEntry>({
     skill:   "Listening",
@@ -49,28 +29,43 @@ export function ErrorLogView() {
     mistake: "",
     rule:    "",
   });
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const updateDraft = (key: keyof ErrorEntry, value: string) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-  const add = async () => {
-    if (!draft.type || !draft.mistake || !draft.rule) return;
-    
-    // 1. Optimistic Update
-    const newError = { ...draft };
+  const add = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (saving) return;
+    const newError = {
+      ...draft,
+      type: draft.type.trim(),
+      mistake: draft.mistake.trim(),
+      rule: draft.rule.trim(),
+    };
+    if (!newError.type || !newError.mistake || !newError.rule) {
+      setMessage("Complete all three fields to save a prevention rule.");
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
     setErrors((all) => [newError, ...all]);
     setDraft({ skill: "Listening", type: "", mistake: "", rule: "" });
     setOpen(false);
 
-    // 2. Background Save
     try {
-      // Simulate API call / Supabase insert
-      // await supabase.from("error_logs").insert([{ user_id: user.id, ...newError }]);
-      await new Promise(resolve => setTimeout(resolve, 800)); 
-    } catch (err) {
-      console.error("Failed to save error rule", err);
-      // Revert if failed
+      const response = await fetch("/api/errors", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skill: newError.skill, errorType: newError.type, mistake: newError.mistake, correctionRule: newError.rule }) });
+      if (!response.ok) throw new Error("Save failed");
+      const saved = await response.json() as { id?: string };
+      if (saved.id) setErrors((all) => all.map((entry) => entry === newError ? { ...entry, id: saved.id } : entry));
+      setMessage("Prevention rule saved.");
+    } catch {
       setErrors((all) => all.filter((e) => e !== newError));
+      setMessage("The prevention rule could not be saved.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -103,42 +98,35 @@ export function ErrorLogView() {
       {open && (
         <section className="error-form panel">
           <h2>Turn a mistake into a rule</h2>
-          <div>
-            <select
-              value={draft.skill}
-              onChange={(e) => updateDraft("skill", e.target.value as Skill)}
-              aria-label="Skill"
-            >
-              <option>Listening</option>
-              <option>Reading</option>
-              <option>Writing</option>
-              <option>Speaking</option>
-            </select>
-            <input
-              placeholder="Error type (e.g. Distractor)"
-              value={draft.type}
-              onChange={(e) => updateDraft("type", e.target.value)}
-            />
-            <input
-              placeholder="What happened?"
-              value={draft.mistake}
-              onChange={(e) => updateDraft("mistake", e.target.value)}
-            />
-            <input
-              placeholder="Your prevention rule"
-              value={draft.rule}
-              onChange={(e) => updateDraft("rule", e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && add()}
-            />
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button className="primary-button" onClick={add}>
-              Save rule
-            </button>
-            <button className="text-button" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
-          </div>
+          <form onSubmit={add} aria-label="Add prevention rule">
+            <div className="error-form-fields">
+              <label>Skill
+                <select value={draft.skill} onChange={(e) => updateDraft("skill", e.target.value as Skill)}>
+                  <option>Listening</option>
+                  <option>Reading</option>
+                  <option>Writing</option>
+                  <option>Speaking</option>
+                </select>
+              </label>
+              <label>Error type
+                <input autoFocus placeholder="e.g. Distractor" value={draft.type} onChange={(e) => updateDraft("type", e.target.value)} />
+              </label>
+              <label>What happened?
+                <input placeholder="Describe the mistake" value={draft.mistake} onChange={(e) => updateDraft("mistake", e.target.value)} />
+              </label>
+              <label>Next-time rule
+                <input placeholder="How will you prevent it?" value={draft.rule} onChange={(e) => updateDraft("rule", e.target.value)} />
+              </label>
+            </div>
+            <div className="error-form-actions">
+              <button className="primary-button" type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save rule"}
+              </button>
+              <button className="text-button" type="button" onClick={() => setOpen(false)} disabled={saving}>
+                Cancel
+              </button>
+            </div>
+          </form>
         </section>
       )}
 
@@ -146,7 +134,7 @@ export function ErrorLogView() {
       <section className="error-list">
         {errors.map((entry, index) => (
           <article
-            key={`${entry.skill}-${index}`}
+            key={entry.id ?? `${entry.skill}-${index}`}
             data-skill={entry.skill}
           >
             <div className="error-count">{index + 1}</div>
@@ -164,6 +152,8 @@ export function ErrorLogView() {
           </article>
         ))}
       </section>
+      {errors.length === 0 && <div className="empty-state"><h2>No errors logged yet</h2><p>Add a mistake only when you can turn it into a precise prevention rule.</p></div>}
+      {message && <p role="status">{message}</p>}
     </div>
   );
 }

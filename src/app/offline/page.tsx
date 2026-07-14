@@ -7,7 +7,7 @@ export default function OfflinePage() {
       <WifiOff size={64} style={{ color: "var(--muted)", marginBottom: 24 }} />
       <h1>You are offline</h1>
       <p style={{ maxWidth: 400, color: "var(--text)", marginBottom: 24 }}>
-        We couldn't reach the server. Connect to the internet to access new lessons and sync your progress.
+        We couldn&apos;t reach the server. Connect to the internet to access new lessons and sync your progress.
       </p>
       <Link href="/" className="primary-button">
         Try again

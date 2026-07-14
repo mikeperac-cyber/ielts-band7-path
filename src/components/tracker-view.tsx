@@ -1,26 +1,21 @@
 "use client";
 
-import { Check, Download, Plus, Search, SlidersHorizontal, Target, CheckCircle2 } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type Skill   = "Listening" | "Reading" | "Writing" | "Speaking";
-type Status  = "Reused" | "Ready" | "Learning";
+export type TrackerSkill = "Listening" | "Reading" | "Writing" | "Speaking";
+type Skill = TrackerSkill;
+export type TrackerStatus = "Reused" | "Ready" | "Learning";
+type Status = TrackerStatus;
 
-interface Phrase {
+export interface TrackerPhrase {
   phrase:     string;
   skill:      Skill;
   confidence: number; // 1–5
   use:        string;
   status:     Status;
 }
-
-const initialPhrases: Phrase[] = [
-  { phrase: "in light of the evidence",  skill: "Reading",  confidence: 4, use: "Used in a Reading explanation", status: "Reused"   },
-  { phrase: "a key factor in",           skill: "Speaking", confidence: 3, use: "Used in Part 3 practice",       status: "Reused"   },
-  { phrase: "it can be inferred that",   skill: "Reading",  confidence: 4, use: "Saved from Day 2",              status: "Ready"    },
-  { phrase: "consequently",              skill: "Writing",  confidence: 2, use: "Needs an original example",     status: "Learning" },
-  { phrase: "a marked contrast",         skill: "Writing",  confidence: 3, use: "Used in Task 1 planning",       status: "Ready"    },
-];
+type Phrase = TrackerPhrase;
 
 const SKILL_COLORS: Record<Skill, string> = {
   Listening: "var(--skill-listening)",
@@ -92,11 +87,13 @@ function FilterChip({
 }
 
 export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: Phrase[] }) {
-  const [phrases,   setPhrases]   = useState<Phrase[]>(initialPhrasesFromDb ?? initialPhrases);
+  const [phrases,   setPhrases]   = useState<Phrase[]>(initialPhrasesFromDb ?? []);
   const [query,     setQuery]     = useState("");
   const [filter,    setFilter]    = useState<"All" | Skill>("All");
   const [adding,    setAdding]    = useState(false);
   const [newPhrase, setNewPhrase] = useState("");
+  const [newSkill, setNewSkill] = useState<Skill>("Writing");
+  const [message, setMessage] = useState("");
 
   const filtered = useMemo(
     () =>
@@ -108,12 +105,14 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
     [phrases, query, filter]
   );
 
-  const save = () => {
+  const save = async () => {
     if (!newPhrase.trim()) return;
+    const response = await fetch("/api/lexical", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phrase: newPhrase.trim(), skill: newSkill }) });
+    if (!response.ok) { setMessage("The phrase could not be saved."); return; }
     setPhrases((items) => [
       {
         phrase:     newPhrase.trim().toLowerCase(),
-        skill:      "Writing",
+        skill:      newSkill,
         confidence: 1,
         use:        "Add your own example",
         status:     "Learning",
@@ -124,7 +123,9 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
     setAdding(false);
   };
 
-  const logReuse = (phrase: string) => {
+  const logReuse = async (phrase: string) => {
+    const response = await fetch("/api/lexical", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phrase }) });
+    if (!response.ok) { setMessage("Reuse evidence could not be saved."); return; }
     setPhrases((items) =>
       items.map((p) =>
         p.phrase === phrase
@@ -147,72 +148,27 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
         </button>
       </div>
 
-      {/* Weekly Phrase Sprint Challenge */}
-      <section className="panel" style={{ background: "linear-gradient(to right, #fef3c7, #fffbeb)", border: "1px solid #fde68a" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ background: "#f59e0b", color: "white", padding: 10, borderRadius: 12 }}>
-              <Target size={24} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: 18, margin: "0 0 4px", color: "#92400e" }}>Weekly Phrase Sprint</h2>
-              <p style={{ margin: 0, fontSize: 14, color: "#b45309" }}>Use these 5 phrases in your Speaking or Writing sessions this week to earn your badge.</p>
-            </div>
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#d97706", background: "#fef3c7", padding: "4px 12px", borderRadius: 99, border: "1px solid #fcd34d" }}>
-            3/5 completed
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8 }}>
-          {[
-            { p: "in light of the evidence", done: true },
-            { p: "a decisive factor in", done: true },
-            { p: "it can be inferred that", done: false },
-            { p: "consequently", done: false },
-            { p: "a marked contrast", done: true },
-          ].map((item, i) => (
-            <div key={i} style={{ 
-              flexShrink: 0, 
-              background: item.done ? "#10b981" : "white", 
-              color: item.done ? "white" : "var(--text)",
-              border: `1px solid ${item.done ? "#059669" : "#fcd34d"}`,
-              padding: "8px 16px",
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
-            }}>
-              {item.done && <CheckCircle2 size={16} />}
-              {item.p}
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Summary cards */}
       <section className="tracker-summary">
         <article>
           <span>Saved phrases</span>
           <strong>{phrases.length}</strong>
-          <small>+3 this week</small>
+          <small>Stored privately</small>
         </article>
         <article>
           <span>Reused successfully</span>
-          <strong>12</strong>
-          <small>Across 4 skills</small>
+          <strong>{phrases.filter((phrase) => phrase.status === "Reused").length}</strong>
+          <small>With recorded evidence</small>
         </article>
         <article>
           <span>Ready for exam use</span>
-          <strong>7</strong>
+          <strong>{phrases.filter((phrase) => phrase.confidence >= 4).length}</strong>
           <small>Confidence 4–5</small>
         </article>
         <article>
           <span>Next review</span>
-          <strong>Tomorrow</strong>
-          <small>4 phrases due</small>
+          <strong>{phrases.filter((phrase) => phrase.status !== "Reused").length}</strong>
+          <small>Need natural reuse</small>
         </article>
       </section>
 
@@ -228,9 +184,10 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
             placeholder="e.g. a decisive factor in"
             value={newPhrase}
             onChange={(e) => setNewPhrase(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && save()}
+            onKeyDown={(e) => { if (e.key === "Enter") void save(); }}
           />
-          <button className="primary-button" onClick={save}>
+          <select value={newSkill} onChange={(event) => setNewSkill(event.target.value as Skill)} aria-label="Phrase skill">{SKILLS.filter((skill) => skill !== "All").map((skill) => <option key={skill}>{skill}</option>)}</select>
+          <button className="primary-button" onClick={() => void save()}>
             Save phrase
           </button>
           <button className="text-button" onClick={() => setAdding(false)}>
@@ -265,12 +222,6 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
               placeholder="Search phrases"
             />
           </label>
-          <button>
-            <SlidersHorizontal size={16} /> Filters
-          </button>
-          <button>
-            <Download size={16} /> Export
-          </button>
         </div>
 
         {/* Phrase table */}
@@ -319,7 +270,7 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
                     </span>
                   </td>
                   <td>
-                    <button className="row-action" onClick={() => logReuse(item.phrase)}>
+                    <button className="row-action" onClick={() => void logReuse(item.phrase)}>
                       Log reuse
                     </button>
                   </td>
@@ -336,6 +287,7 @@ export function TrackerView({ initialPhrasesFromDb }: { initialPhrasesFromDb?: P
           </table>
         </div>
       </section>
+      {message && <p role="status">{message}</p>}
     </div>
   );
 }

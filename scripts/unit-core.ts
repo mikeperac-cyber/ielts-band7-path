@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { DAILY_AI_LIMIT, SPEAKING_PARTIAL_LABEL, isValidHalfBand, minimumWritingWords, normaliseAnswer, quotaAvailable } from "../src/lib/assessment";
+import { toLocalDay } from "../src/lib/course-plan";
+import { courseLessonV2Schema } from "../src/lib/course-content/schema";
+import { convertLegacyLesson } from "../src/lib/course-content/legacy";
+
+assert.equal(toLocalDay(2, 8), 1);
+assert.equal(toLocalDay(10, 70), 7);
+assert.equal(toLocalDay(2, 7), null);
+assert.equal(normaliseAnswer("  FRIDAY.  "), "friday");
+assert.equal(normaliseAnswer("students’ union"), "students' union");
+assert.equal(isValidHalfBand(8.5), true);
+assert.equal(isValidHalfBand(8.25), false);
+assert.equal(isValidHalfBand(9.5), false);
+assert.equal(minimumWritingWords("task1"), 150);
+assert.equal(minimumWritingWords("task2"), 250);
+assert.equal(quotaAvailable(DAILY_AI_LIMIT - 1), true);
+assert.equal(quotaAvailable(DAILY_AI_LIMIT), false);
+assert.match(SPEAKING_PARTIAL_LABEL, /partial Speaking practice estimate/);
+const sample = convertLegacyLesson(1, 1);
+assert.ok(sample && courseLessonV2Schema.safeParse(sample.content).success);
+assert.equal(sample?.review.activityReviews["week-1-day-1-listening"].acceptableAnswers?.length, 6);
+console.log("Core unit checks passed: mapping, schemas, answers, scores, word limits, quota, and partial Speaking labels.");

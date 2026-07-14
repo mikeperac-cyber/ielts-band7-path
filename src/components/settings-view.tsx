@@ -1,85 +1,26 @@
 "use client";
 
-import { CheckCircle2, Download, Mail, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-export function SettingsView({ initialTestDate }: { initialTestDate?: string | null }) {
-  const [testDate, setTestDate] = useState(initialTestDate || "");
+export function SettingsView({ initialTestDate, initialCurrentBand }: { initialTestDate?: string | null; initialCurrentBand: number }) {
+  const [testDate, setTestDate] = useState(initialTestDate ?? "");
+  const [currentBand, setCurrentBand] = useState(initialCurrentBand);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
   const router = useRouter();
-
-  const handleSave = async () => {
-    setSaving(true);
+  async function save() {
+    setSaving(true); setMessage("");
     const supabase = createBrowserSupabaseClient();
-    if (supabase) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("profiles").update({ test_date: testDate || null }).eq("id", user.id);
-        router.refresh();
-      }
-    }
-    setSaving(false);
-  };
-
-  return (
-    <div className="page-wrap settings-page">
-      <div className="page-intro">
-        <div>
-          <h1>Settings</h1>
-          <p>Manage your study profile and account preferences.</p>
-        </div>
-      </div>
-      <section className="settings-grid">
-        <article className="panel">
-          <h2>Study profile</h2>
-          <label>
-            Current band
-            <input defaultValue="6.0" disabled />
-          </label>
-          <label>
-            Target band
-            <input defaultValue="7.0" disabled />
-          </label>
-          <label>
-            Target test date
-            <input 
-              type="date" 
-              value={testDate} 
-              onChange={(e) => setTestDate(e.target.value)} 
-            />
-          </label>
-          <button 
-            className="primary-button" 
-            onClick={handleSave} 
-            disabled={saving || testDate === (initialTestDate || "")}
-          >
-            {saving ? "Saving..." : "Save changes"}
-          </button>
-        </article>
-
-        <article className="panel">
-          <ShieldCheck size={25} />
-          <h2>Your progress is private</h2>
-          <p>Only your signed-in account can see your lesson attempts, error log, mock results, and lexical tracker.</p>
-          <span className="secure-status"><CheckCircle2 size={16} /> Cloud sync ready</span>
-        </article>
-
-        <article className="panel">
-          <Download size={25} />
-          <h2>Export your data</h2>
-          <p>Download your learning record before moving devices or whenever you want a personal backup.</p>
-          <button className="outline-button"><Download size={16} /> Export progress</button>
-        </article>
-
-        <article className="panel">
-          <Mail size={25} />
-          <h2>Sign-in email</h2>
-          <p>Magic-link authentication keeps your account password-free.</p>
-          <button className="text-button">Update email preferences</button>
-        </article>
-      </section>
-    </div>
-  );
+    const { data: { user } } = await supabase!.auth.getUser();
+    const { error } = await supabase!.from("profiles").update({ test_date: testDate || null, current_band: currentBand, target_band: 9.0, updated_at: new Date().toISOString() }).eq("id", user!.id);
+    setMessage(error ? "Settings could not be saved." : "Settings saved.");
+    setSaving(false); router.refresh();
+  }
+  return <div className="page-wrap settings-page"><div className="page-intro"><div><h1>Settings</h1><p>Manage your starting point. The programme target remains Band 9.</p></div></div><section className="settings-grid">
+    <article className="panel"><h2>Study profile</h2><label>Current band<input type="number" min="0" max="9" step="0.5" value={currentBand} onChange={(event) => setCurrentBand(Number(event.target.value))} /></label><label>Programme target<input value="9.0" disabled /></label><label>Target test date<input type="date" value={testDate} onChange={(event) => setTestDate(event.target.value)} /></label><button className="primary-button" type="button" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : "Save changes"}</button>{message && <p role="status">{message}</p>}</article>
+    <article className="panel"><ShieldCheck size={25} /><h2>Your progress is private</h2><p>Only your signed-in account can see lesson attempts, recordings, writing, error rules, and lexical evidence.</p><span className="secure-status"><CheckCircle2 size={16} /> Row-level security enabled</span></article>
+  </section></div>;
 }

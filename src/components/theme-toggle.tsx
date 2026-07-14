@@ -2,20 +2,14 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return <div style={{ width: 20, height: 20 }} />;
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <button
       type="button"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label="Toggle dark mode"
       style={{
         display: "flex",
@@ -30,7 +24,7 @@ export function ThemeToggle() {
       }}
       className="theme-toggle hover:scale-110"
     >
-      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      <span suppressHydrationWarning>{resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</span>
     </button>
   );
 }

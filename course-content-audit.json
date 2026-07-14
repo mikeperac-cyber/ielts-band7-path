@@ -1,0 +1,30 @@
+{
+  "auditVersion": 2,
+  "product": "IELTS Academic Band 9 Path",
+  "scope": {
+    "programmeDays": 70,
+    "regularLessons": 50,
+    "diagnosticCheckpoints": 20,
+    "objectiveActivities": 90
+  },
+  "preserveFirstRules": {
+    "audioChanged": false,
+    "paidBuildTimeAiCalls": 0,
+    "systemCopyBritishEnglish": true,
+    "shortDrillsClaimBand": false,
+    "diagnosticsClaimFullMock": false
+  },
+  "formatCorrections": {
+    "completionActivitiesPreserved": 16,
+    "openComprehensionActivitiesReclassifiedAsMultipleChoice": 74,
+    "writingTask1ActivitiesGivenPracticeDataTables": true,
+    "speakingActivitiesUseParts1To3": true,
+    "week10Day6MalformedWrittenReviewRepaired": true
+  },
+  "deferred": [
+    "Complete 40-question Listening and Reading examinations",
+    "Complete four-skill mock examinations and official band trajectories",
+    "Pronunciation scoring",
+    "Email delivery and data export"
+  ]
+}

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     default: "IELTS Academic Band 9 Path | 10-Week Self-Study Programme",
     template: "%s | IELTS Academic Band 9 Path",
   },
-  description: "Build Band 9 IELTS Academic skills with daily study plans, original Listening audio, full timed mocks, and a lexical tracker.",
+  description: "Build IELTS Academic Band 9 performance with protected daily lessons, frozen original Listening audio, diagnostic checkpoints, and durable learning evidence.",
   keywords: ["IELTS Academic", "IELTS Band 9", "IELTS self-study", "IELTS Listening practice", "IELTS mock test"],
   openGraph: {
     title: "IELTS Academic Band 9 Path",
@@ -47,7 +47,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#203a52" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
