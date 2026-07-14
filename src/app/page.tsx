@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
@@ -18,8 +19,8 @@ const features: Array<[typeof Headphones, string, string]> = [
   ],
   [
     Timer,
-    "Real exam pressure",
-    "Take two full four-skill mocks each week at official IELTS timing.",
+    "Timed diagnostic practice",
+    "Use two honest checkpoints each week to collect skill evidence without claiming a full mock band.",
   ],
   [
     TrendingUp,
@@ -39,7 +40,7 @@ const faqs = [
   ],
   [
     "How much study is required?",
-    "Most days take 90–120 minutes. Day 3 and Day 7 are full four-skill mock days, using official IELTS timing.",
+    "Most regular lessons take 90–120 minutes. Day 3 and Day 7 are diagnostic checkpoints; full mock examinations are a later phase.",
   ],
 ];
 
@@ -100,37 +101,54 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mock dashboard card */}
-        <div
-          className="hero-dashboard"
-          aria-label="Example learner dashboard"
-        >
-          <div className="hero-dashboard-top">
-            <span>Week 1 of 10</span>
-            <b>12% complete</b>
-          </div>
-          <h2>Today: Listening + Speaking</h2>
-          <p>Accuracy in understanding. Clarity in response.</p>
-          <div className="hero-task">
-            <Headphones size={23} />
-            <span>
-              <b>Listening</b>
-              <small>Note completion · 30 min</small>
-            </span>
-            <i>1</i>
-          </div>
-          <div className="hero-task">
-            <Mic2 size={23} />
-            <span>
-              <b>Speaking</b>
-              <small>Part 1 &amp; 2 practice · 30 min</small>
-            </span>
-            <i>2</i>
-          </div>
-          <div className="hero-lexical">
-            <span>LEXICAL PHRASE OF THE DAY</span>
-            <strong>in the long term</strong>
-            <p>Saved · Ready to reuse</p>
+        <div className="hero-side">
+          <aside className="brand-spotlight" aria-label="Language Bridge English Co. partner logo">
+            <Image
+              src="/brand/language-bridge-logo-optimized.png"
+              alt="LB English Co. Language Bridge — English community and services"
+              width={220}
+              height={220}
+              priority
+            />
+            <div>
+              <span className="section-kicker">Learner community partner</span>
+              <h2>Language Bridge English Co.</h2>
+              <p>Connecting people through the love of language.</p>
+            </div>
+          </aside>
+
+          {/* Mock dashboard card */}
+          <div
+            className="hero-dashboard"
+            aria-label="Example learner dashboard"
+          >
+            <div className="hero-dashboard-top">
+              <span>Illustrative learner view</span>
+              <b>No stored progress</b>
+            </div>
+            <h2>Today: Listening + Speaking</h2>
+            <p>Accuracy in understanding. Clarity in response.</p>
+            <div className="hero-task">
+              <Headphones size={23} />
+              <span>
+                <b>Listening</b>
+                <small>Note completion · 30 min</small>
+              </span>
+              <i>1</i>
+            </div>
+            <div className="hero-task">
+              <Mic2 size={23} />
+              <span>
+                <b>Speaking</b>
+                <small>Part 1 &amp; 2 practice · 30 min</small>
+              </span>
+              <i>2</i>
+            </div>
+            <div className="hero-lexical">
+              <span>LEXICAL PHRASE OF THE DAY</span>
+              <strong>in the long term</strong>
+              <p>Example of precise, reusable language</p>
+            </div>
           </div>
         </div>
       </section>
@@ -139,11 +157,11 @@ export default function Home() {
       <section id="programme" className="marketing-band">
         <div>
           <span className="section-kicker">A complete study system</span>
-          <h2>70 study days. 20 full mocks. One clear route to Band 9.</h2>
+          <h2>50 focused lessons. 20 timed diagnostics. One clear route to Band 9.</h2>
         </div>
         <p>
           Every day gives you a focused pair of IELTS skills, guided preparation,
-          difficult Band 9+ practice, note-taking space, phrase work, and a specific
+          descriptor-aligned Band 9 practice, note-taking space, phrase work, and a specific
           reflection step.
         </p>
       </section>
@@ -208,13 +226,13 @@ export default function Home() {
         <div>
           <ShieldCheck size={26} />
           <span className="section-kicker">Mock days: Day 3 and Day 7</span>
-          <h2>Full four-skill examinations, built to get harder every week.</h2>
+          <h2>Timed diagnostic checkpoints that become more demanding each week.</h2>
         </div>
         <div className="mock-timing">
-          <strong>2 h 45 m</strong>
-          <span>Listening · Reading · Writing · Speaking</span>
+          <strong>Evidence, not a mock band</strong>
+          <span>Listening · Reading · Writing · Speaking checkpoints</span>
           <Link href="/sign-in">
-            Unlock full mocks <ArrowRight size={16} />
+            Open the programme <ArrowRight size={16} />
           </Link>
         </div>
       </section>

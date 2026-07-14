@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  Bell,
   BookOpen,
   CalendarDays,
   ChevronRight,
@@ -25,7 +24,7 @@ const navItems = [
   { href: "/dashboard",   label: "Dashboard",      icon: LayoutDashboard },
   { href: "/programme",   label: "Programme",       icon: CalendarDays },
   { href: "/learn/1/1",   label: "Lessons",         icon: BookOpen },
-  { href: "/mocks/1/1",   label: "Mock exams",      icon: ClipboardCheck },
+  { href: "/mocks/1/1",   label: "Diagnostics",     icon: ClipboardCheck },
   { href: "/tracker",     label: "Lexical tracker", icon: BarChart3 },
   { href: "/error-log",   label: "Error log",       icon: Flag },
 ];
@@ -65,7 +64,7 @@ function BandRing({ current, target }: { current: number; target: number }) {
   );
 }
 
-export function AppShell({ title, testDate, children }: { title: string; testDate?: string | null; children: ReactNode }) {
+export function AppShell({ title, testDate, currentBand, children }: { title: string; testDate?: string | null; currentBand: number; children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -145,25 +144,25 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
           <Target size={19} />
           <div>
             <span>Target band</span>
-            <strong>7.0 Overall</strong>
+            <strong>9.0 Overall</strong>
           </div>
           <div className="band-ring-wrap" style={{ clear: "both" }}>
-            <BandRing current={6} target={7} />
+            <BandRing current={currentBand} target={9} />
             <div className="band-ring-labels">
               <span>Current</span>
-              <strong>6.0</strong>
-              <small>→ 7.0 target</small>
+              <strong>{currentBand.toFixed(1)}</strong>
+              <small>→ 9.0 target</small>
             </div>
           </div>
         </div>
 
         {/* Test Date Countdown */}
         {daysRemaining !== null && (
-          <div style={{ margin: "0 16px 16px", background: "var(--orange-bg)", color: "var(--orange)", padding: "12px", borderRadius: 12, display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="test-date-countdown" aria-label={`${daysRemaining} days until test date`}>
             <Timer size={20} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Test Date</div>
-              <div style={{ fontSize: 12 }}>{daysRemaining} days remaining</div>
+              <strong>Test date</strong>
+              <span>{daysRemaining} days remaining</span>
             </div>
           </div>
         )}
@@ -183,11 +182,6 @@ export function AppShell({ title, testDate, children }: { title: string; testDat
           <span className="topbar-title">{title}</span>
           <div className="topbar-right">
             <ThemeToggle />
-            {/* Notification bell */}
-            <button className="notif-bell" aria-label="Notifications" type="button">
-              <Bell size={18} />
-              <span className="notif-dot" aria-hidden="true" />
-            </button>
             {/* Profile avatar */}
             <Link href="/settings" className="profile-dot" aria-label="Open settings">
               {title.includes("Welcome back") ? title.split(", ")[1]?.[0]?.toUpperCase() ?? "A" : "A"}
@@ -224,14 +218,15 @@ export function Metric({
   value,
   detail,
   icon: Icon,
+  progress = 0,
 }: {
   label: string;
   value: string;
   detail: string;
   icon: typeof FileText;
+  progress?: number;
 }) {
-  // Extract numeric percentage for the bar width
-  const barWidth = value.endsWith("%") ? value : "50%";
+  const barWidth = `${Math.max(0, Math.min(100, progress))}%`;
   return (
     <article className="metric">
       <Icon size={19} />
